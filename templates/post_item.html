@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Post Item - FindYourLosts</title>
+</head>
+<body>
+
+<h2>Post Lost / Found Item</h2>
+
+<form method="POST" enctype="multipart/form-data">
+    <input type="Text" name="title" placeholder="Item Title" required><br><br>
+
+    <textarea name="description" placeholder="Item Description" required></textarea><br><br>
+
+    <input type="text" name="category" placeholder="Category (Wallet, Phone, etc)" required><br><br>
+
+    <input type="text" name="location" plaeholder="Location Found/Lost" required><br><br>
+
+    <input type="date" name="item_date" required><br><br>
+
+    <select name="type" required>
+        <option value="">Select Type</option>
+        <option value="lost">Lost</option>
+        <option value="found">Found</option>
+    </select><br><br>
+
+    <input type="file" name="image" accept="image/*"><br><br>
+
+    <button type="submit">Post Item</button>
+</form>
+
+<br>
+<a href="/dashboard">Back to Dashboard</a>
+
+</body>
+</html>
