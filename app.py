@@ -10,7 +10,6 @@ app.secret_key = config.SECRET_KEY
 
 UPLOAD_FOLDER = config.UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def get_db_connection():
@@ -51,12 +50,11 @@ def login():
 
     return render_template('login.html')
 
-
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
         return redirect('/login')
-    
+
     keyword = request.args.get('keyword', '')
     item_type = request.args.get('type', '')
     category = request.args.get('category', '')
@@ -83,8 +81,6 @@ def dashboard():
 
     query += " ORDER BY created_at DESC"
 
-
-
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(query, params)
@@ -100,14 +96,14 @@ def dashboard():
         <input type="text" name="location" placeholder="Location" value="{location}">
 
         <select name="type">
-            <option value="">All</options>
+            <option value="">All</option>
             <option value="lost" {'selected' if item_type=='lost' else ''}>Lost</option>
             <option value="found" {'selected' if item_type=='found' else ''}>Found</option>
         </select>
 
-
         <button type="submit">Search</button>
     </form>
+
     <br>
     <a href="/post-item">Post New Item</a> |
     <a href="/logout">Logout</a>
@@ -115,16 +111,16 @@ def dashboard():
     """
 
     if not items:
-        html += "<p>No items posted yet.</p>"
+        html += "<p>No items found.</p>"
 
     for item in items:
         html += f"""
         <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
             <h3>
               <a href="/item/{item['id']}">{item['title']}</a>
-              ({item['type']})
+              ({item['type']}) — <b>{item['status']}</b>
             </h3>
-            <p>{item['description'][:100]}...</p>
+            <p>{item['description'][:120]}...</p>
             <p><b>Category:</b> {item['category']}</p>
             <p><b>Location:</b> {item['location']}</p>
         """
@@ -135,7 +131,6 @@ def dashboard():
         html += "</div>"
 
     return html
-
 
 @app.route('/post-item', methods=['GET', 'POST'])
 def post_item():
@@ -159,11 +154,10 @@ def post_item():
 
         conn = get_db_connection()
         cursor = conn.cursor()
-
         cursor.execute("""
             INSERT INTO items
             (user_id, title, description, category, location, item_date, image, type)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
         """, (
             session['user_id'],
             title,
@@ -174,7 +168,6 @@ def post_item():
             image_filename,
             item_type
         ))
-
         conn.commit()
         conn.close()
 
@@ -186,7 +179,7 @@ def post_item():
 def item_detail(item_id):
     if 'user_id' not in session:
         return redirect('/login')
-    
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM items WHERE id = %s", (item_id,))
@@ -195,25 +188,59 @@ def item_detail(item_id):
 
     if not item:
         return "<h3>Item not found</h3>"
-    
+
     html = f"""
     <h2>{item['title']} ({item['type']})</h2>
     <p>{item['description']}</p>
     <p><b>Category:</b> {item['category']}</p>
     <p><b>Location:</b> {item['location']}</p>
     <p><b>Date:</b> {item['item_date']}</p>
-    <p><b>Status:</b> {item['status']}</p>
+    <p><b>Status:</b> <b>{item['status'].upper()}</b></p>
     """
 
     if item['image']:
         html += f"<img src='/static/uploads/{item['image']}' width='300'><br><br>"
 
-    html += """
-    <a href="/dashboard">Back to Dashboard</a>
-    """
+    if item['status'] == 'open':
+        html += f"<a href='/claim/{item_id}'>Claim Item</a><br><br>"
 
+    if item['status'] == 'claimed' and item['user_id'] == session['user_id']:
+        html += f"<a href='/return/{item_id}'>Mark as Returned</a><br><br>"
+
+    html += "<a href='/dashboard'>Back to Dashboard</a>"
     return html
-    
+
+@app.route('/claim/<int:item_id>')
+def claim_item(item_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE items SET status='claimed'
+        WHERE id=%s AND status='open'
+    """, (item_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(f'/item/{item_id}')
+
+@app.route('/return/<int:item_id>')
+def return_item(item_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE items SET status='returned'
+        WHERE id=%s AND user_id=%s
+    """, (item_id, session['user_id']))
+    conn.commit()
+    conn.close()
+
+    return redirect(f'/item/{item_id}')
 
 @app.route('/logout')
 def logout():
