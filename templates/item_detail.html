@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="padding: 30px 0;">
+    <h1>{{ item.title }}</h1>
+    <p>{{ item.description }}</p>
+    {% if item.image %}
+    <img src="/static/uploads/{{ item.image }}" style="max-width: 400px;">
+    {% endif %}
+    {% if item.status == 'open' %}
+    <a href="/claim/{{ item.id }}" class="btn btn-primary">Claim Item</a>
+    {% endif %}
+</div>
+{% endblock %}

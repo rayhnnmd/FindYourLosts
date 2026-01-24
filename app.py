@@ -24,9 +24,12 @@ def get_db_connection():
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def admin_only():
+    return 'user_id' in session and session.get('role') == 'admin'
+
 @app.route('/')
 def home():
-    return redirect('/login')
+    return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -60,7 +63,7 @@ def dashboard():
     category = request.args.get('category', '')
     location = request.args.get('location', '')
 
-    query = "SELECT * FROM items WHERE 1=1"
+    query = "SELECT * FROM items WHERE approved =1"
     params = []
 
     if keyword:
@@ -87,50 +90,7 @@ def dashboard():
     items = cursor.fetchall()
     conn.close()
 
-    html = f"""
-    <h2>Welcome {session['user_name']}</h2>
-
-    <form method="GET">
-        <input type="text" name="keyword" placeholder="Search keyword" value="{keyword}">
-        <input type="text" name="category" placeholder="Category" value="{category}">
-        <input type="text" name="location" placeholder="Location" value="{location}">
-
-        <select name="type">
-            <option value="">All</option>
-            <option value="lost" {'selected' if item_type=='lost' else ''}>Lost</option>
-            <option value="found" {'selected' if item_type=='found' else ''}>Found</option>
-        </select>
-
-        <button type="submit">Search</button>
-    </form>
-
-    <br>
-    <a href="/post-item">Post New Item</a> |
-    <a href="/logout">Logout</a>
-    <hr>
-    """
-
-    if not items:
-        html += "<p>No items found.</p>"
-
-    for item in items:
-        html += f"""
-        <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
-            <h3>
-              <a href="/item/{item['id']}">{item['title']}</a>
-              ({item['type']}) — <b>{item['status']}</b>
-            </h3>
-            <p>{item['description'][:120]}...</p>
-            <p><b>Category:</b> {item['category']}</p>
-            <p><b>Location:</b> {item['location']}</p>
-        """
-
-        if item['image']:
-            html += f"<img src='/static/uploads/{item['image']}' width='150'><br>"
-
-        html += "</div>"
-
-    return html
+    return render_template('dashboard.html', items=items, keyword=keyword, item_type=item_type, category=category, location=location)
 
 @app.route('/post-item', methods=['GET', 'POST'])
 def post_item():
@@ -189,26 +149,7 @@ def item_detail(item_id):
     if not item:
         return "<h3>Item not found</h3>"
 
-    html = f"""
-    <h2>{item['title']} ({item['type']})</h2>
-    <p>{item['description']}</p>
-    <p><b>Category:</b> {item['category']}</p>
-    <p><b>Location:</b> {item['location']}</p>
-    <p><b>Date:</b> {item['item_date']}</p>
-    <p><b>Status:</b> <b>{item['status'].upper()}</b></p>
-    """
-
-    if item['image']:
-        html += f"<img src='/static/uploads/{item['image']}' width='300'><br><br>"
-
-    if item['status'] == 'open':
-        html += f"<a href='/claim/{item_id}'>Claim Item</a><br><br>"
-
-    if item['status'] == 'claimed' and item['user_id'] == session['user_id']:
-        html += f"<a href='/return/{item_id}'>Mark as Returned</a><br><br>"
-
-    html += "<a href='/dashboard'>Back to Dashboard</a>"
-    return html
+    return render_template('item_detail.html', item=item)
 
 @app.route('/claim/<int:item_id>')
 def claim_item(item_id):
@@ -242,6 +183,58 @@ def return_item(item_id):
 
     return redirect(f'/item/{item_id}')
 
+
+@app.route('/admin')
+def admin_dashboard():
+    if not admin_only():
+        return "Access Denied", 403
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM items ORDER BY created_at DESC")
+    items = cursor.fetchall()
+    conn.close()
+
+    return render_template('admin.html', items=items)
+
+@app.route('/admin/approve/<int:item_id>')
+def approve_item(item_id):
+    if not admin_only():
+        return "Access Denied", 403
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE items SET approved = 1 WHERE id = %s
+    """,(item_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect('/admin')
+
+@app.route('/admin/delete/<int:item_id>')
+def delete_item(item_id):
+    if not admin_only():
+        return "Access Denied", 403
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT image FROM items WHERE id=%s", (item_id,))
+    item = cursor.fetchone()
+
+    if item and item['image']:
+        try:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], item['image']))
+        except:
+            pass
+
+    cursor.execute("DELETE FROM items WHERE id = %s", (item_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect('/admin')
+
+
 @app.route('/logout')
 def logout():
     session.clear()
@@ -249,3 +242,4 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
