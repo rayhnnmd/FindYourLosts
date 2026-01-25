@@ -1,36 +1,66 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Post Item - FindYourLosts</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-<h2>Post Lost / Found Item</h2>
+{% block content %}
+<div class="container" style="max-width: 600px; margin-top: 30px; margin-bottom: 50px;">
+    <h2 style="margin-bottom: 20px;">Post a New Item</h2>
 
-<form method="POST" enctype="multipart/form-data">
-    <input type="Text" name="title" placeholder="Item Title" required><br><br>
+    <div class="card"
+        style="padding: 30px; background: white; border-radius: var(--radius); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <form method="POST" enctype="multipart/form-data">
 
-    <textarea name="description" placeholder="Item Description" required></textarea><br><br>
+            <div style="margin-bottom: 15px;">
+                <label class="label">Item Title</label>
+                <input type="text" name="title" required class="input"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+            </div>
 
-    <input type="text" name="category" placeholder="Category (Wallet, Phone, etc)" required><br><br>
+            <div style="margin-bottom: 15px;">
+                <label class="label">Item Type</label>
+                <select name="type" required class="input"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+                    <option value="">Select Type</option>
+                    <option value="lost">Lost</option>
+                    <option value="found">Found</option>
+                </select>
+            </div>
 
-    <input type="text" name="location" placeholder="Location (Library, Hostel, Parking)" required><br><br>
+            <div style="margin-bottom: 15px;">
+                <label class="label">Category</label>
+                <input type="text" name="category" placeholder="e.g. Wallet, Phone" required class="input"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+            </div>
 
-    <input type="date" name="item_date" required><br><br>
+            <div style="margin-bottom: 15px;">
+                <label class="label">Location</label>
+                <input type="text" name="location" placeholder="Where was it lost/found?" required class="input"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+            </div>
 
-    <select name="type" required>
-        <option value="">Select Type</option>
-        <option value="lost">Lost</option>
-        <option value="found">Found</option>
-    </select><br><br>
+            <div style="margin-bottom: 15px;">
+                <label class="label">Date</label>
+                <input type="date" name="item_date" required class="input"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+            </div>
 
-    <input type="file" name="image" accept="image/*"><br><br>
+            <div style="margin-bottom: 15px;">
+                <label class="label">Contact Number</label>
+                <input type="tel" name="contact_info" placeholder="Enter phone number" required class="input"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+            </div>
 
-    <button type="submit">Post Item</button>
-</form>
+            <div style="margin-bottom: 15px;">
+                <label class="label">Description</label>
+                <textarea name="description" rows="4" required class="input"
+                    style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;"></textarea>
+            </div>
 
-<br>
-<a href="/dashboard">Back to Dashboard</a>
+            <div style="margin-bottom: 20px;">
+                <label class="label">Image</label>
+                <input type="file" name="image" accept="image/*" class="input" style="width: 100%;">
+            </div>
 
-</body>
-</html>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Post Item</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

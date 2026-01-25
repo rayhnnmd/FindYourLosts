@@ -1,19 +1,63 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="container" style="padding: 30px 0;">
-    <h2>Admin Dashboard</h2>
-    <table>
-        {% for item in items %}
-        <tr>
-            <td>{{ item.title }}</td>
-            <td>
-                {% if not item.approved %}
-                <a href="/admin/approve/{{ item.id }}">Approve</a>
-                {% endif %}
-                <a href="/admin/delete/{{ item.id }}">Delete</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+<div class="container" style="margin-top: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Admin Dashboard</h2>
+        <a href="/dashboard" class="btn btn-outline">Back to Site</a>
+    </div>
+
+    <div class="card"
+        style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid #eee; text-align: left;">
+                    <th style="padding: 10px;">ID</th>
+                    <th style="padding: 10px;">Title</th>
+                    <th style="padding: 10px;">Category</th>
+                    <th style="padding: 10px;">Status</th>
+                    <th style="padding: 10px;">Approved</th>
+                    <th style="padding: 10px; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px; color: #666;">#{{ item.id }}</td>
+                    <td style="padding: 10px; font-weight: 500;">
+                        {{ item.title }} <br>
+                        <span style="font-size: 0.8rem; color: #999;">{{ item.type|upper }}</span>
+                    </td>
+                    <td style="padding: 10px;">{{ item.category }}</td>
+                    <td style="padding: 10px;">
+                        <span
+                            style="padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; background: {{ '#e6fffa' if item.status == 'found' else '#fff5f5' }}; color: {{ '#00b894' if item.status == 'found' else '#d63031' }};">
+                            {{ item.status }}
+                        </span>
+                    </td>
+                    <td style="padding: 10px;">
+                        {% if item.approved %}
+                        <span style="color: green;">&#10003; Yes</span>
+                        {% else %}
+                        <span style="color: orange;">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 10px; text-align: right;">
+                        {% if not item.approved %}
+                        <a href="/admin/approve/{{ item.id }}" class="btn btn-primary"
+                            style="padding: 5px 15px; font-size: 0.8rem;">Approve</a>
+                        {% endif %}
+                        <a href="/admin/delete/{{ item.id }}"
+                            style="color: red; margin-left: 10px; font-size: 0.9rem;">Delete</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="padding: 30px; text-align: center; color: #999;">No items found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

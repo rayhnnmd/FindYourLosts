@@ -1,14 +1,175 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="container">
-    <h2>Dashboard</h2>
-    <div class="grid">
-        {% for item in items %}
-        <div class="card">
-            <h3><a href="/item/{{ item.id }}">{{ item.title }}</a></h3>
-            <p>{{ item.category }}</p>
+<div class="container" style="display: flex; gap: 30px; margin-top: 30px;">
+
+    <!-- Sidebar -->
+    <aside style="width: 250px; flex-shrink: 0;">
+        <div class="card" style="padding: 10px; background: white; border-radius: 12px; margin-bottom: 20px;">
+            <!-- Sidebar Navigation -->
+            <ul style="padding: 10px 0;">
+                <li style="margin-bottom: 5px;">
+                    <a href="/dashboard"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--primary); background: #fff0eb; font-weight: 600;">
+                        <i data-feather="grid"></i> Feed
+                    </a>
+                </li>
+                <li style="margin-bottom: 5px;">
+                    <a href="/my-posts"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: #666; font-weight: 500;">
+                        <i data-feather="archive"></i> My Posts
+                    </a>
+                </li>
+                <li style="margin-bottom: 5px;">
+                    <a href="#"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: #666; font-weight: 500;">
+                        <i data-feather="check-circle"></i> Claimed Items
+                    </a>
+                </li>
+            </ul>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+
+            <ul style="padding: 10px 0;">
+                <li style="margin-bottom: 5px;">
+                    <a href="#"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: #666; font-weight: 500;">
+                        <i data-feather="user"></i> Profile
+                    </a>
+                </li>
+                <li style="margin-bottom: 5px;">
+                    <a href="#"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: #666; font-weight: 500;">
+                        <i data-feather="settings"></i> Settings
+                    </a>
+                </li>
+                {% if session.get('role') == 'admin' %}
+                <li style="margin-bottom: 5px;">
+                    <a href="/admin"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--secondary); font-weight: 600;">
+                        <i data-feather="shield"></i> Admin Panel
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
         </div>
-        {% endfor %}
+
+        <!-- Lost Something Specific Widget -->
+
+    </aside>
+
+    <!-- Main Content -->
+    <div style="flex-grow: 1;">
+        <!-- Header Section -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px;">
+            <div>
+                <h2 style="font-size: 2rem; margin-bottom: 5px;">Finding what's <span
+                        style="color: var(--primary); font-style: italic;">lost</span></h2>
+                <p style="color: #666;">Search the community database for items reported found.</p>
+            </div>
+            <a href="/post-item" class="btn btn-primary" style="box-shadow: 0 4px 10px rgba(255, 107, 74, 0.3);">
+                <i data-feather="plus-circle" style="vertical-align: middle; margin-right: 5px;"></i> Post Found Item
+            </a>
+        </div>
+
+        <!-- Search Bar Container -->
+        <div
+            style="background: #fff; padding: 10px; border-radius: 12px; display: flex; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); margin-bottom: 30px;">
+            <form method="GET" action="/dashboard" style="display: flex; width: 100%; gap: 10px;">
+                <div style="flex-grow: 1; position: relative; display: flex; align-items: center;">
+                    <i data-feather="search" style="position: absolute; left: 15px; color: #999; width: 20px;"></i>
+                    <input type="text" name="keyword" value="{{ keyword }}"
+                        placeholder="Search for items (e.g. 'black wallet', 'iphone 13')"
+                        style="width: 100%; padding: 12px 12px 12px 45px; border: none; background: transparent; outline: none; font-size: 1rem;">
+                </div>
+                <!-- Filters inline -->
+                <select name="type"
+                    style="padding: 0 15px; border: 1px solid #eee; border-radius: 8px; background: #f8f9fa; color: #666; cursor: pointer;">
+                    <option value="">All Categories</option>
+                    <option value="lost" {% if item_type=='lost' %}selected{% endif %}>Lost</option>
+                    <option value="found" {% if item_type=='found' %}selected{% endif %}>Found</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Search Items</button>
+            </form>
+        </div>
+
+        <!-- Filters Row (Visual Only for match) -->
+        <div style="display: flex; gap: 15px; margin-bottom: 30px;">
+            <button
+                style="padding: 8px 15px; background: white; border: 1px solid #eee; border-radius: 6px; color: #666; font-size: 0.9rem; display: flex; align-items: center; gap: 5px;">
+                <i data-feather="calendar" style="width: 14px;"></i> Past 24 Hours
+            </button>
+            <button
+                style="padding: 8px 15px; background: white; border: 1px solid #eee; border-radius: 6px; color: #666; font-size: 0.9rem; display: flex; align-items: center; gap: 5px;">
+                <i data-feather="map-pin" style="width: 14px;"></i> Near Me
+            </button>
+            <a href="/dashboard"
+                style="margin-left: auto; color: var(--primary); font-size: 0.9rem; display: flex; align-items: center; gap: 5px;">
+                <i data-feather="x" style="width: 14px;"></i> Clear Filters
+            </a>
+        </div>
+
+
+        <!-- Items Grid -->
+        {% if items %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px;">
+            {% for item in items %}
+            <div class="card"
+                style="background: white; border-radius: 16px; overflow: hidden; border: 1px solid #eee; transition: transform 0.2s;">
+                <!-- Badge -->
+                <div
+                    style="position: absolute; margin: 15px; padding: 5px 10px; background: #e6fffa; color: #00b894; font-size: 0.7rem; font-weight: 700; border-radius: 4px; text-transform: uppercase; z-index: 2;">
+                    AVAILABLE
+                </div>
+
+                {% if item.image %}
+                <div style="height: 200px; overflow: hidden; background: #f8f9fa;">
+                    <img src="/static/uploads/{{ item.image }}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                {% else %}
+                <div
+                    style="height: 200px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; color: #bdc3c7;">
+                    <i data-feather="image" style="width: 40px; height: 40px;"></i>
+                </div>
+                {% endif %}
+
+                <div style="padding: 20px;">
+                    <h3
+                        style="font-size: 1.1rem; margin: 0 0 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ item.title }}
+                    </h3>
+                    <p
+                        style="font-size: 0.8rem; color: #999; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        {{ item.category }}</p>
+
+                    <div
+                        style="display: flex; align-items: center; gap: 5px; color: #666; font-size: 0.85rem; margin-bottom: 5px;">
+                        <i data-feather="map-pin" style="width: 14px;"></i> {{ item.location }}
+                    </div>
+                    <div
+                        style="display: flex; align-items: center; gap: 5px; color: #666; font-size: 0.85rem; margin-bottom: 20px;">
+                        <i data-feather="clock" style="width: 14px;"></i> {{ item.item_date }}
+                    </div>
+
+                    {% if item.type == 'lost' %}
+                    <a href="/item/{{ item.id }}" class="btn btn-outline"
+                        style="width: 100%; text-align: center; border-color: var(--primary); color: var(--primary);">Claim
+                        Item</a>
+                    {% else %}
+                    <a href="/item/{{ item.id }}" class="btn btn-outline"
+                        style="width: 100%; text-align: center; border-color: var(--primary); color: var(--primary);">Claim
+                        Item</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 50px; background: white; border-radius: 12px;">
+            <h3>No items found</h3>
+            <p>Try adjusting your search filters.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

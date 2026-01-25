@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="display: flex; gap: 30px; margin-top: 30px;">
+
+    <aside style="width: 250px; flex-shrink: 0;">
+        <div class="card" style="padding: 10px; background: white; border-radius: 12px; margin-bottom: 20px;">
+            <ul style="padding: 10px 0;">
+                <li style="margin-bottom: 5px;">
+                    <a href="/dashboard"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: #666; font-weight: 500;">
+                        <i data-feather="grid"></i> Feed
+                    </a>
+                </li>
+                <li style="margin-bottom: 5px;">
+                    <a href="/my-posts"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--primary); background: #fff0eb; font-weight: 600;">
+                        <i data-feather="archive"></i> My Posts
+                    </a>
+                </li>
+                <li style="margin-bottom: 5px;">
+                    <a href="#"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: #666; font-weight: 500;">
+                        <i data-feather="check-circle"></i> Claimed Items
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <div style="flex-grow: 1;">
+        <div style="margin-bottom: 30px;">
+            <h2>My Posts</h2>
+            <p style="color: #666;">Manage the items you have reported.</p>
+        </div>
+
+        {% if items %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px;">
+            {% for item in items %}
+            {% if item.approved %}
+            <div class="card" style="background: white; border-radius: 16px; overflow: hidden; border: 1px solid #eee; opacity: 1;">
+                <div style="position: absolute; margin: 15px; padding: 5px 10px; border-radius: 4px; text-transform: uppercase; z-index: 2; font-size: 0.7rem; font-weight: 700; background: #e6fffa; color: #00b894;">
+                    LIVE
+                </div>
+            {% else %}
+            <div class="card" style="background: white; border-radius: 16px; overflow: hidden; border: 1px solid #eee; opacity: 0.7;">
+                <div style="position: absolute; margin: 15px; padding: 5px 10px; border-radius: 4px; text-transform: uppercase; z-index: 2; font-size: 0.7rem; font-weight: 700; background: #fff3cd; color: #856404;">
+                    PENDING APPROVAL
+                </div>
+            {% endif %}
+
+                <div style="height: 150px; overflow: hidden; background: #f8f9fa;">
+                    {% if item.image %}
+                    <img src="/static/uploads/{{ item.image }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <div
+                        style="display: flex; align-items: center; justify-content: center; height: 100%; color: #bdc3c7;">
+                        <i data-feather="image"></i></div>
+                    {% endif %}
+                </div>
+
+                <div style="padding: 20px;">
+                    <h3 style="font-size: 1.1rem; margin: 0 0 5px 0;">{{ item.title }}</h3>
+                    <p style="font-size: 0.8rem; color: #999;">{{ item.item_date }}</p>
+                    <div style="margin-top: 15px;">
+                        <a href="/item/{{ item.id }}" class="btn btn-outline"
+                            style="width: 100%; text-align: center; font-size: 0.8rem; padding: 8px;">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 50px; background: white; border-radius: 12px;">
+            <h3>You haven't posted anything yet.</h3>
+            <a href="/post-item" class="btn btn-primary" style="margin-top: 10px;">Post Your First Item</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

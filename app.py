@@ -4,6 +4,9 @@ from werkzeug.utils import secure_filename
 import pymysql
 import config
 import os
+import firebase_admin
+from firebase_admin import credentials, auth
+from flask import jsonify
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -11,6 +14,12 @@ app.secret_key = config.SECRET_KEY
 UPLOAD_FOLDER = config.UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+try:
+    cred = credentials.Certificate("serviceAccountKey.json")
+    firebase_admin.initialize_app(cred)
+except Exception as e:
+    print(f"Warning: Firebase Admin SDK not initialized. {e}")
+
 
 def get_db_connection():
     return pymysql.connect(
@@ -31,27 +40,65 @@ def admin_only():
 def home():
     return render_template('index.html')
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login')
 def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+    return render_template('login.html')
 
+@app.route('/login/google', methods=['POST'])
+def google_login():
+    data = request.json
+    id_token = data.get('token')
+
+    if not id_token:
+        return jsonify({'success': False, 'error': 'No token provided'}), 400
+
+    try:
+        decoded_token = auth.verify_id_token(id_token)
+        email = decoded_token['email']
+        name = decoded_token.get('name', '')
+       
         conn = get_db_connection()
         cursor = conn.cursor()
+        
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
-        conn.close()
 
-        if user and check_password_hash(user['password'], password):
+        determined_role = 'admin' if email == 'rayhnmd024@gmail.com' else 'user'
+        
+        if user:
+            if user['role'] != determined_role:
+                cursor.execute("UPDATE users SET role = %s WHERE id = %s", (determined_role, user['id']))
+                conn.commit()
+                cursor.execute("SELECT * FROM users WHERE id = %s", (user['id'],))
+                user = cursor.fetchone()
+
             session['user_id'] = user['id']
             session['user_name'] = user['name']
             session['role'] = user['role']
-            return redirect('/dashboard')
+        else:
+            from werkzeug.security import generate_password_hash
+            import secrets
+            
+            dummy_password = generate_password_hash(secrets.token_hex(16))
+            
+            cursor.execute("INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, %s)", 
+                           (name, email, dummy_password, determined_role))
+            conn.commit()
+            
+            cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+            new_user = cursor.fetchone()
+            
+            session['user_id'] = new_user['id']
+            session['user_name'] = new_user['name']
+            session['role'] = new_user['role']
 
-        flash("Invalid email or password")
+        conn.close()
+        
+        return jsonify({'success': True})
 
-    return render_template('login.html')
+    except Exception as e:
+        print(f"Error validating token: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 401
 
 @app.route('/dashboard')
 def dashboard():
@@ -92,6 +139,19 @@ def dashboard():
 
     return render_template('dashboard.html', items=items, keyword=keyword, item_type=item_type, category=category, location=location)
 
+@app.route('/my-posts')
+def my_posts():
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM items WHERE user_id = %s ORDER BY created_at DESC", (session['user_id'],))
+    items = cursor.fetchall()
+    conn.close()
+
+    return render_template('my_posts.html', items=items)
+
 @app.route('/post-item', methods=['GET', 'POST'])
 def post_item():
     if 'user_id' not in session:
@@ -104,6 +164,7 @@ def post_item():
         location = request.form['location']
         item_date = request.form['item_date']
         item_type = request.form['type']
+        contact_info = request.form['contact_info']
 
         image_filename = None
         file = request.files.get('image')
@@ -116,8 +177,8 @@ def post_item():
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO items
-            (user_id, title, description, category, location, item_date, image, type)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+            (user_id, title, description, category, location, item_date, image, type, approved, contact_info)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """, (
             session['user_id'],
             title,
@@ -126,7 +187,9 @@ def post_item():
             location,
             item_date,
             image_filename,
-            item_type
+            item_type,
+            0,
+            contact_info
         ))
         conn.commit()
         conn.close()

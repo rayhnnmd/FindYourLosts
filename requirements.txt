@@ -3,3 +3,5 @@ flask-mysqldb
 flask-login
 pymysql
 werkzeug
+firebase-admin
+python-dotenv

@@ -6,9 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FindYourLosts</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
 </head>
 
@@ -25,6 +23,10 @@
             <div class="nav-actions">
                 {% if session.get('user_id') %}
                 <a href="/dashboard" class="btn btn-outline">Dashboard</a>
+                {% if session.get('role') == 'admin' %}
+                <a href="/admin" class="btn btn-primary" style="background-color: var(--secondary); border: none;">Admin
+                    Panel</a>
+                {% endif %}
                 <a href="/logout" class="btn btn-primary">Logout</a>
                 {% else %}
                 <a href="/login" class="btn btn-transparent">Login</a>

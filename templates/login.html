@@ -1,15 +1,95 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login - FindYourLosts</title>
-</head>
-<body>
-    <h2>FindYourLosts Login</h2>
+{% extends "base.html" %}
 
-    <form method="POST">
-        <input type="email" name="email" placeholder="Email" required><br><br>
-        <input type="password" name="password" placeholder="Password" required><br><br>
-        <button type="submit">Login</button>
-    </form>
-</body>
-</html>
+{% block content %}
+<div class="container" style="max-width: 400px; margin: 50px auto;">
+    <div class="card"
+        style="padding: 40px 30px; background: white; border-radius: var(--radius); box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
+
+        <div style="margin-bottom: 30px;">
+            <div
+                style="width: 50px; height: 50px; background: #fff0eb; color: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                <i data-feather="key"></i>
+            </div>
+            <h2 style="margin-bottom: 10px;">Welcome back.</h2>
+            <p style="color: #666;">Log in to your FindYourLosts account.</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div style="color: red; margin-bottom: 15px; font-size: 0.9rem;">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div style="margin-bottom: 25px;">
+            <!-- Google Login Button moved here conceptually -->
+        </div>
+
+        <!-- Google Login Placeholder (Firebase) -->
+        <button id="google-login-btn"
+            style="width: 100%; padding: 12px; background: white; border: 1px solid #ddd; border-radius: 8px; font-weight: 600; color: #333; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: background 0.2s;">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18">
+            Google
+        </button>
+        <div id="firebase-error" style="color: red; margin-top: 10px; font-size: 0.8rem; display: none;"></div>
+
+        <p style="margin-top: 30px; font-size: 0.9rem; color: #666;">
+            New to FindYourLosts? <a href="#" style="color: var(--primary); font-weight: 600;">Join the community</a>
+        </p>
+    </div>
+</div>
+
+<!-- Firebase Scripts (Placeholder) -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCROESXRkOMptAEnL50diO1aJ1WeXL-ko4",
+        authDomain: "findyourlosts.firebaseapp.com",
+        projectId: "findyourlosts",
+        storageBucket: "findyourlosts.firebasestorage.app",
+        messagingSenderId: "459164647009",
+        appId: "1:459164647009:web:1e0a0f2879a078b745f420"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    document.getElementById('google-login-btn').addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider)
+            .then((result) => {
+                return result.user.getIdToken();
+            })
+            .then((idToken) => {
+                fetch('/login/google', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: idToken }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.href = "/dashboard";
+                        } else {
+                            throw new Error(data.error || 'Login failed');
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        document.getElementById('firebase-error').innerText = "Backend Error: " + error.message;
+                        document.getElementById('firebase-error').style.display = 'block';
+                    });
+            })
+            .catch((error) => {
+                console.error('Firebase Error:', error);
+                document.getElementById('firebase-error').innerText = error.message;
+                document.getElementById('firebase-error').style.display = 'block';
+            });
+    });
+</script>
+{% endblock %}

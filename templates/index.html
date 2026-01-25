@@ -1,11 +1,31 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="container" style="padding: 50px 0; text-align: center;">
-    <h1>Welcome to FindYourLosts</h1>
-    <p>Reuniting you with everything that matters.</p>
-    <div style="margin-top: 30px;">
-        <a href="/post-item" class="btn btn-primary">I Lost Something</a>
-        <a href="/dashboard" class="btn btn-outline">I Found Something</a>
+<div
+    style="background-color: var(--background); min-height: 80vh; display: flex; align-items: center; justify-content: center; text-align: center;">
+    <div class="container">
+
+        <span
+            style="color: var(--primary); font-weight: 700; letter-spacing: 1px; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 20px; display: block;">FindYourLosts
+            Community</span>
+
+        <h1
+            style="font-size: 4.5rem; line-height: 1.1; margin-bottom: 30px; color: var(--secondary); max-width: 800px; margin-left: auto; margin-right: auto;">
+            Reuniting you with <br>
+            <span style="font-style: italic; color: var(--primary); font-family: serif;">everything</span> that matters.
+        </h1>
+
+        <p
+            style="font-size: 1.2rem; color: #666; margin-bottom: 50px; max-width: 600px; margin-left: auto; margin-right: auto;">
+            The world's most trusted platform for lost and found items. Powered by community and care.
+        </p>
+
+        <!-- Single Get Started Button -->
+        <a href="/dashboard" class="btn btn-primary"
+            style="padding: 18px 45px; font-size: 1.1rem; box-shadow: 0 10px 25px rgba(255, 107, 74, 0.4);">
+            Get Started
+        </a>
+
     </div>
 </div>
 {% endblock %}
