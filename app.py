@@ -53,7 +53,7 @@ def google_login():
         return jsonify({'success': False, 'error': 'No token provided'}), 400
 
     try:
-        decoded_token = auth.verify_id_token(id_token)
+        decoded_token = auth.verify_id_token(id_token, clock_skew_seconds=10)
         email = decoded_token['email']
         name = decoded_token.get('name', '')
        
