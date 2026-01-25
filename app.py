@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, flash
+from flask import Flask, render_template, request, redirect, session, flash, jsonify
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 import pymysql
@@ -6,7 +6,6 @@ import config
 import os
 import firebase_admin
 from firebase_admin import credentials, auth
-from flask import jsonify
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -14,6 +13,7 @@ app.secret_key = config.SECRET_KEY
 UPLOAD_FOLDER = config.UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 try:
     cred = credentials.Certificate("serviceAccountKey.json")
     firebase_admin.initialize_app(cred)
@@ -305,4 +305,3 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
