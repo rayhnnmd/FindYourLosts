@@ -1,63 +1,280 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html class="light" lang="en">
 
-{% block content %}
-<div class="container" style="margin-top: 30px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2>Admin Dashboard</h2>
-        <a href="/dashboard" class="btn btn-outline">Back to Site</a>
-    </div>
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>FindYourLosts Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#4F46E5",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-item-active {
+            @apply bg-indigo-50 text-primary dark:bg-indigo-900/20 dark:text-indigo-400;
+        }
+    </style>
+</head>
 
-    <div class="card"
-        style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="border-bottom: 2px solid #eee; text-align: left;">
-                    <th style="padding: 10px;">ID</th>
-                    <th style="padding: 10px;">Title</th>
-                    <th style="padding: 10px;">Category</th>
-                    <th style="padding: 10px;">Status</th>
-                    <th style="padding: 10px;">Approved</th>
-                    <th style="padding: 10px; text-align: right;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items %}
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 10px; color: #666;">#{{ item.id }}</td>
-                    <td style="padding: 10px; font-weight: 500;">
-                        {{ item.title }} <br>
-                        <span style="font-size: 0.8rem; color: #999;">{{ item.type|upper }}</span>
-                    </td>
-                    <td style="padding: 10px;">{{ item.category }}</td>
-                    <td style="padding: 10px;">
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div class="flex h-screen overflow-hidden">
+        <aside
+            class="w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden md:flex flex-col">
+            <div class="p-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined">location_searching</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-bold text-lg leading-none tracking-tight">FindYourLosts</span>
+                    <span class="text-[10px] font-semibold text-primary uppercase tracking-wider">Admin Panel</span>
+                </div>
+            </div>
+            <nav class="flex-1 px-4 space-y-1 mt-4">
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/dashboard">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg sidebar-item-active transition-colors"
+                    href="/admin">
+                    <span class="material-symbols-outlined">assignment</span>
+                    Post Management
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined">group</span>
+                    User Management
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="#">
+                    <span class="material-symbols-outlined">settings</span>
+                    System Settings
+                </a>
+            </nav>
+            <div class="p-4 mt-auto border-t border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-3 px-2">
+                    <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                        <img alt="Admin Avatar"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-ZR3Po3OJRhLgvmZeClV5MeEm81dpSgkaEc_LGU5q9EoPyZIsgJxVqIC1cBpnt2GQv9Ifc_sj4p3vnMw90ZeQM5neZZPjPlR5FS_cwfnxOat_cxWGW2D-UkSu3PTQXe6isOF_MXRnP5HDmTU6CDcMZIqSeNcl_bGUP_EtW1JWS5N2lP5y7L-bXxCoGnaDMA-hr2IVEjSHDVDIHtZEO1Xz8GWFl_DcEzgYhRqp5eAWuCZbDf0PNyC5b7WfWhFnNDgrnWAbgYvm5DY" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate">Admin</p>
+                        <p class="text-xs text-slate-500 truncate">Moderator</p>
+                    </div>
+                    <button class="p-2 text-slate-400 hover:text-primary transition-colors"
+                        onclick="document.documentElement.classList.toggle('dark')">
+                        <span class="material-symbols-outlined text-lg">dark_mode</span>
+                    </button>
+                    <a href="/logout" class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Logout">
+                        <span class="material-symbols-outlined text-lg">logout</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header
+                class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur flex items-center justify-between px-8">
+                <div class="flex items-center gap-4">
+                    <h1 class="text-xl font-semibold">Post Moderation</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="relative">
                         <span
-                            style="padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; background: {{ '#e6fffa' if item.status == 'found' else '#fff5f5' }}; color: {{ '#00b894' if item.status == 'found' else '#d63031' }};">
-                            {{ item.status }}
-                        </span>
-                    </td>
-                    <td style="padding: 10px;">
-                        {% if item.approved %}
-                        <span style="color: green;">&#10003; Yes</span>
-                        {% else %}
-                        <span style="color: orange;">Pending</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 10px; text-align: right;">
-                        {% if not item.approved %}
-                        <a href="/admin/approve/{{ item.id }}" class="btn btn-primary"
-                            style="padding: 5px 15px; font-size: 0.8rem;">Approve</a>
-                        {% endif %}
-                        <a href="/admin/delete/{{ item.id }}"
-                            style="color: red; margin-left: 10px; font-size: 0.9rem;">Delete</a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6" style="padding: 30px; text-align: center; color: #999;">No items found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+                        <input
+                            class="pl-10 pr-4 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none w-64 transition-all"
+                            placeholder="Search items..." type="text" />
+                    </div>
+                    <button class="relative p-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                    </button>
+                </div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div
+                        class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl">
+                                <span class="material-symbols-outlined">inventory_2</span>
+                            </div>
+                            <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">Live</span>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Items</p>
+                        <p class="text-2xl font-bold mt-1">{{ items|length }}</p>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div
+                                class="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl">
+                                <span class="material-symbols-outlined">handshake</span>
+                            </div>
+                            <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">Live</span>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Approved Items</p>
+                        <p class="text-2xl font-bold mt-1">{{ items | selectattr('approved', 'equalto', 1) | list |
+                            length }}</p>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div
+                                class="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-xl">
+                                <span class="material-symbols-outlined">rule</span>
+                            </div>
+                            <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded">New</span>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Pending Approvals</p>
+                        <p class="text-2xl font-bold mt-1">{{ items | selectattr('approved', 'equalto', 0) | list |
+                            length }}</p>
+                    </div>
+                </div>
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div
+                        class="p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">Recent Post Moderation
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <button
+                                class="px-4 py-2 text-sm font-medium border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                Filter
+                            </button>
+                            <button
+                                class="px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                                Export CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr
+                                    class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                                    <th class="px-6 py-4 font-semibold">Item ID</th>
+                                    <th class="px-6 py-4 font-semibold">Item Details</th>
+                                    <th class="px-6 py-4 font-semibold">Reporter</th>
+                                    <th class="px-6 py-4 font-semibold">Date</th>
+                                    <th class="px-6 py-4 font-semibold">Status</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                {% for item in items %}
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-mono text-slate-500">#LF-{{ item.id }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+                                                {% if item.image %}
+                                                <img src="/static/uploads/{{ item.image }}"
+                                                    class="w-full h-full object-cover">
+                                                {% else %}
+                                                <span
+                                                    class="material-symbols-outlined text-slate-400 text-lg">image</span>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-medium">{{ item.title }}</p>
+                                                <p class="text-xs text-slate-500">{{ item.category }} • {{ item.type }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-2">
+                                            <div
+                                                class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-600">
+                                                UI
+                                            </div>
+                                            <!-- Ideally we would join with users table but we only have user_id for now -->
+                                            <span class="text-sm">User #{{ item.user_id }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-slate-500">{{ item.item_date }}</td>
+                                    <td class="px-6 py-4">
+                                        {% if item.approved %}
+                                        <span
+                                            class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Approved</span>
+                                        {% else %}
+                                        <span
+                                            class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 text-right space-x-2">
+                                        {% if not item.approved %}
+                                        <a href="/admin/approve/{{ item.id }}"
+                                            class="inline-block p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
+                                            title="Approve">
+                                            <span class="material-symbols-outlined text-xl">check</span>
+                                        </a>
+                                        {% endif %}
+                                        <button
+                                            class="p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded transition-colors"
+                                            title="Flag" onclick="alert('Flag feature coming soon')">
+                                            <span class="material-symbols-outlined text-xl">flag</span>
+                                        </button>
+                                        <a href="/admin/delete/{{ item.id }}"
+                                            class="inline-block p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                            title="Delete" onclick="return confirm('Are you sure?')">
+                                            <span class="material-symbols-outlined text-xl">delete</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 text-center text-slate-500">No items found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <p class="text-sm text-slate-500">Showing all {{ items|length }} results</p>
+                        <!-- Pagination placeholders -->
+                        <div class="flex gap-2">
+                            <button
+                                class="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                                disabled="">Previous</button>
+                            <button
+                                class="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-</div>
-{% endblock %}
+
+</body>
+
+</html>
