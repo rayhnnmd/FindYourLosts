@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 import pymysql
 import config
 import os
+import uuid
 import firebase_admin
 from firebase_admin import credentials, auth
 
@@ -170,7 +171,9 @@ def post_item():
         file = request.files.get('image')
 
         if file and file.filename != '' and allowed_file(file.filename):
-            image_filename = secure_filename(file.filename)
+            # Generate a unique filename to prevent collisions
+            ext = file.filename.rsplit('.', 1)[1].lower()
+            image_filename = f"{uuid.uuid4().hex}.{ext}"
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
 
         conn = get_db_connection()
@@ -207,12 +210,24 @@ def item_detail(item_id):
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM items WHERE id = %s", (item_id,))
     item = cursor.fetchone()
+
+    # Get recent items (last 24 hours), excluding current item, limit 4
+    cursor.execute("""
+        SELECT * FROM items 
+        WHERE approved = 1 
+        AND id != %s 
+        AND created_at >= NOW() - INTERVAL 24 HOUR 
+        ORDER BY created_at DESC 
+        LIMIT 4
+    """, (item_id,))
+    recent_items = cursor.fetchall()
+
     conn.close()
 
     if not item:
         return "<h3>Item not found</h3>"
 
-    return render_template('item_detail.html', item=item)
+    return render_template('item_detail.html', item=item, recent_items=recent_items)
 
 @app.route('/claim/<int:item_id>')
 def claim_item(item_id):
@@ -286,16 +301,60 @@ def delete_item(item_id):
     item = cursor.fetchone()
 
     if item and item['image']:
-        try:
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], item['image']))
-        except:
-            pass
+        # Safety check: Only delete file if no other items are using it
+        cursor.execute("SELECT COUNT(*) as count FROM items WHERE image = %s AND id != %s", (item['image'], item_id))
+        usage_count = cursor.fetchone()['count']
+        
+        if usage_count == 0:
+            try:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], item['image']))
+            except:
+                pass
 
     cursor.execute("DELETE FROM items WHERE id = %s", (item_id,))
     conn.commit()
     conn.close()
 
     return redirect('/admin')
+
+
+@app.route('/delete-item/<int:item_id>')
+def delete_user_item(item_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Check if the item belongs to the user
+    cursor.execute("SELECT image, user_id FROM items WHERE id=%s", (item_id,))
+    item = cursor.fetchone()
+
+    if not item:
+        conn.close()
+        return "Item not found", 404
+
+    if item['user_id'] != session['user_id']:
+        conn.close()
+        return "Unauthorized", 403
+
+    # Delete image if exists and not shared
+    if item['image']:
+        # Safety check: Only delete file if no other items are using it
+        cursor.execute("SELECT COUNT(*) as count FROM items WHERE image = %s AND id != %s", (item['image'], item_id))
+        usage_count = cursor.fetchone()['count']
+
+        if usage_count == 0:
+            try:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], item['image']))
+            except:
+                pass
+
+    cursor.execute("DELETE FROM items WHERE id = %s", (item_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect('/my-posts')
 
 
 @app.route('/logout')

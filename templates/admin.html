@@ -17,7 +17,7 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#4F46E5",
+                        primary: "#FF6B4A",
                         "background-light": "#F9FAFB",
                         "background-dark": "#111827",
                     },
@@ -40,6 +40,12 @@
         }
     </style>
 </head>
+<script>
+    // Check for saved theme preference immediately
+    if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
+    }
+</script>
 
 <body
     class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-200">
@@ -51,7 +57,11 @@
                     <span class="material-symbols-outlined">location_searching</span>
                 </div>
                 <div class="flex flex-col">
-                    <span class="font-bold text-lg leading-none tracking-tight">FindYourLosts</span>
+                    <span class="font-extrabold italic tracking-tighter text-lg leading-none">
+                        <span class="text-primary">Find</span><span
+                            class="text-indigo-950 dark:text-slate-100">YourLosts</span><span
+                            class="text-primary">.</span>
+                    </span>
                     <span class="text-[10px] font-semibold text-primary uppercase tracking-wider">Admin Panel</span>
                 </div>
             </div>
@@ -87,8 +97,7 @@
                         <p class="text-sm font-medium truncate">Admin</p>
                         <p class="text-xs text-slate-500 truncate">Moderator</p>
                     </div>
-                    <button class="p-2 text-slate-400 hover:text-primary transition-colors"
-                        onclick="document.documentElement.classList.toggle('dark')">
+                    <button id="theme-toggle" class="p-2 text-slate-400 hover:text-primary transition-colors">
                         <span class="material-symbols-outlined text-lg">dark_mode</span>
                     </button>
                     <a href="/logout" class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Logout">
@@ -275,6 +284,14 @@
         </main>
     </div>
 
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+    </script>
 </body>
 
 </html>

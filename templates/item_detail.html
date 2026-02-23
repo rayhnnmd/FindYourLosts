@@ -19,12 +19,12 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#FF5F33",
+                        primary: "#FF6B4A",
                         "background-light": "#FDF8F6",
                         "background-dark": "#0F172A",
                     },
                     fontFamily: {
-                        display: ["Plus Jakarta Sans", "sans-serif"],
+                        display: ["Inter", "sans-serif"],
                     },
                     borderRadius: {
                         DEFAULT: "12px",
@@ -39,6 +39,12 @@
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
     </style>
+    <script>
+        // Check for saved theme preference immediately
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 
 <body
@@ -49,9 +55,9 @@
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-8">
                     <a href="/"
-                        class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
+                        class="text-2xl font-extrabold tracking-tighter text-slate-900 dark:text-white flex items-center gap-1">
                         <span class="material-symbols-outlined text-primary text-3xl">location_searching</span>
-                        FindYourLosts
+                        <span class="text-primary">Find</span>YourLosts<span class="text-primary">.</span>
                     </a>
                     <div class="hidden md:flex gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
                         <a class="hover:text-primary transition-colors" href="/dashboard">Browse</a>
@@ -180,37 +186,75 @@
         <section class="mt-20 pt-12 border-t border-slate-200 dark:border-slate-800">
             <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Recently Added Items</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <!-- Placeholder for nearby items (can be dynamic later) -->
-                <div class="group cursor-pointer">
+                {% if recent_items %}
+                {% for recent in recent_items %}
+                <a href="/item/{{ recent.id }}" class="group cursor-pointer block">
                     <div
-                        class="aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        class="aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative">
+                        {% if recent.image %}
+                        <img src="/static/uploads/{{ recent.image }}" alt="{{ recent.title }}"
+                            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                        {% else %}
                         <span class="material-symbols-outlined text-slate-300 text-4xl">image</span>
+                        {% endif %}
+
+                        {% if recent.status != 'open' %}
+                        <div
+                            class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-white uppercase tracking-wider">
+                            {{ recent.status }}
+                        </div>
+                        {% endif %}
                     </div>
-                    <h4 class="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors">
-                        More items coming soon...</h4>
+                    <h4
+                        class="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">
+                        {{ recent.title }}</h4>
+                    <div class="flex items-center gap-1 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        <span class="material-symbols-outlined text-[14px]">location_on</span>
+                        <span class="truncate">{{ recent.location }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+                {% else %}
+                <div class="col-span-full py-8 flex flex-col items-center justify-center text-center">
+                    <div
+                        class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+                        <span class="material-symbols-outlined text-slate-400">history_toggle_off</span>
+                    </div>
+                    <p class="text-slate-500 dark:text-slate-400 font-medium">No other items reported in the last 24
+                        hours.</p>
                 </div>
+                {% endif %}
             </div>
         </section>
     </main>
     <footer class="mt-20 py-12 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
         <div
             class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-8">
-            <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">FindYourLosts</span>
+            <span class="text-xl font-extrabold tracking-tighter text-slate-900 dark:text-white"><span
+                    class="text-primary not-italic">Find</span>YourLosts<span
+                    class="text-primary not-italic">.</span></span>
             <div class="flex gap-8 text-sm text-slate-500 dark:text-slate-400">
                 <a class="hover:text-primary" href="#">Terms of Service</a>
                 <a class="hover:text-primary" href="#">Privacy Policy</a>
                 <a class="hover:text-primary" href="#">Contact Support</a>
             </div>
             <div class="flex gap-4">
-                <button
-                    class="p-2 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                    onclick="document.documentElement.classList.toggle('dark')">
+                <button id="theme-toggle"
+                    class="p-2 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                     <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">dark_mode</span>
                 </button>
             </div>
         </div>
     </footer>
 
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+    </script>
 </body>
 
 </html>

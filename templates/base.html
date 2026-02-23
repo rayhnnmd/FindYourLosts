@@ -12,6 +12,14 @@
 
 <body>
 
+    <script>
+        // Check for saved theme preference immediately to avoid flash
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
     <nav class="navbar">
         <div class="container">
             <a href="/" class="logo">Find<span class="highlight">YourLosts</span>.</a>
@@ -24,13 +32,15 @@
                 {% if session.get('user_id') %}
                 <a href="/dashboard" class="btn btn-outline">Dashboard</a>
                 {% if session.get('role') == 'admin' %}
-                <a href="/admin" class="btn btn-primary" style="background-color: var(--secondary); border: none;">Admin
-                    Panel</a>
+                <a href="/admin" class="btn btn-secondary">Admin Panel</a>
                 {% endif %}
                 <a href="/logout" class="btn btn-primary">Logout</a>
                 {% else %}
                 <a href="/login" class="btn btn-transparent">Login</a>
                 {% endif %}
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle Theme">
+                    <i data-feather="moon"></i>
+                </button>
             </div>
         </div>
     </nav>
@@ -46,7 +56,25 @@
     </footer>
 
     <script>
+        // Initial icon update if needed
+        if (document.documentElement.classList.contains('dark')) {
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.setAttribute('data-feather', 'sun');
+        }
+
         feather.replace();
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) {
+                icon.setAttribute('data-feather', isDark ? 'sun' : 'moon');
+                feather.replace();
+            }
+        }
     </script>
 </body>
 

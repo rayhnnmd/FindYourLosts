@@ -20,7 +20,7 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#FF5F33",
+                        primary: "#FF6B4A",
                         "background-light": "#FEF6F1",
                         "background-dark": "#0B1F3F",
                         navy: {
@@ -30,7 +30,7 @@
                         }
                     },
                     fontFamily: {
-                        display: ["Playfair Display", "serif"],
+                        display: ["Inter", "sans-serif"],
                         sans: ["Inter", "sans-serif"],
                     },
                     borderRadius: {
@@ -44,6 +44,12 @@
         .step-active { color: #FF5F33; border-color: #FF5F33; }
         .material-symbols-outlined { vertical-align: middle; }
     </style>
+    <script>
+        // Check for saved theme preference immediately
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 
 <body
@@ -55,8 +61,10 @@
                 <div class="bg-primary p-1.5 rounded-lg transform group-hover:rotate-12 transition-transform">
                     <span class="material-symbols-outlined text-white text-2xl">search_check</span>
                 </div>
-                <h1 class="text-2xl font-bold tracking-tight font-display italic text-navy-900 dark:text-white">
-                    FindYour<span class="text-primary">Losts</span></h1>
+                <h1 class="text-2xl font-extrabold tracking-tighter text-navy-900 dark:text-white">
+                    <span class="text-primary not-italic">Find</span>YourLosts<span
+                        class="text-primary not-italic">.</span>
+                </h1>
             </a>
             <div class="hidden md:flex gap-8 text-sm font-semibold uppercase tracking-wider">
                 <a class="hover:text-primary transition-colors" href="#">Search</a>
@@ -66,9 +74,8 @@
             </div>
         </div>
         <div class="flex items-center gap-6 text-sm font-semibold uppercase tracking-wider">
-            <button
-                class="flex items-center justify-center text-navy-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
-                onclick="document.documentElement.classList.toggle('dark')">
+            <button id="theme-toggle"
+                class="flex items-center justify-center text-navy-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
                 <span class="material-symbols-outlined text-2xl dark:hidden">dark_mode</span>
                 <span class="material-symbols-outlined text-2xl hidden dark:block">light_mode</span>
             </button>
@@ -294,7 +301,9 @@
     <footer class="max-w-7xl mx-auto px-8 py-16 border-t border-orange-100 dark:border-navy-800 mt-24">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div class="col-span-1 md:col-span-2 space-y-4">
-                <h4 class="text-xl font-display font-bold italic">FindYourLosts</h4>
+                <h4 class="text-xl font-extrabold tracking-tighter"><span
+                        class="text-primary not-italic">Find</span>YourLosts<span
+                        class="text-primary not-italic">.</span></h4>
                 <p class="text-sm text-navy-700 dark:text-gray-400 max-w-xs leading-relaxed">The global platform
                     connecting lost items with their rightful owners through the power of community and kindness.</p>
             </div>
@@ -322,6 +331,14 @@
         </div>
     </footer>
 
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+    </script>
 </body>
 
 </html>
