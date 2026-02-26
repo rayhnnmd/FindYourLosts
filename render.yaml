@@ -38,7 +38,9 @@ services:
       - key: MAIL_SENDER_NAME
         value: FindYourLosts
       - key: MAIL_SENDER_EMAIL
-        sync: false # Set in Render dashboard
+        sync: false
+      - key: FIREBASE_CREDENTIALS_JSON
+        sync: false # Paste the content of serviceAccountKey.json here
 
 databases:
   - name: findyourlosts-db

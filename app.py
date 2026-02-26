@@ -9,6 +9,7 @@ import os
 import uuid
 import firebase_admin
 from firebase_admin import credentials, auth
+import json
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -72,8 +73,16 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 try:
-    cred = credentials.Certificate("serviceAccountKey.json")
-    firebase_admin.initialize_app(cred)
+    firebase_creds_json = os.environ.get('FIREBASE_CREDENTIALS_JSON')
+    if firebase_creds_json:
+        # Initialize from environment variable
+        creds_dict = json.loads(firebase_creds_json)
+        cred = credentials.Certificate(creds_dict)
+        firebase_admin.initialize_app(cred)
+    else:
+        # Fallback to local file
+        cred = credentials.Certificate("serviceAccountKey.json")
+        firebase_admin.initialize_app(cred)
 except Exception as e:
     print(f"Warning: Firebase Admin SDK not initialized. {e}")
 
