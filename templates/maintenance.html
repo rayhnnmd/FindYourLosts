@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance - FindYourLosts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-[#FDF8F6] flex items-center justify-center min-h-screen p-4">
+    <div class="max-w-md w-full text-center">
+        <div class="mb-8 flex justify-center">
+            <div class="w-20 h-20 bg-[#FF6B4A]/10 rounded-3xl flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-[#FF6B4A]" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+        </div>
+        <h1 class="text-3xl font-bold text-slate-900 mb-4">Under Maintenance</h1>
+        <p class="text-slate-600 mb-8 leading-relaxed">
+            We're currently performing some scheduled updates to improve your experience. We'll be back shortly!
+        </p>
+        <div class="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+            <span class="flex h-3 w-3 relative">
+                <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-[#FF6B4A]"></span>
+            </span>
+            <span class="text-sm font-semibold text-slate-500">Estimated time: 15-30 minutes</span>
+        </div>
+        {% if session.get('role') in ['admin', 'moderator'] %}
+        <div class="mt-8">
+            <a href="/dashboard" class="text-[#FF6B4A] font-bold hover:underline">
+                Bypass for Staff →
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, redirect, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, session, flash, jsonify, Response
+import csv
+import io
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 import pymysql
@@ -7,9 +9,60 @@ import os
 import uuid
 import firebase_admin
 from firebase_admin import credentials, auth
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import threading
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
+
+def send_broadcast_emails(item_title, item_type, item_location):
+    def send_thread():
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            # Fetch all users who want notifications
+            cursor.execute("SELECT email FROM users WHERE email_notifications = 1")
+            users = cursor.fetchall()
+            conn.close()
+
+            if not users:
+                return
+
+            # SMTP Setup
+            server = smtplib.SMTP(config.MAIL_SERVER, config.MAIL_PORT)
+            if config.MAIL_USE_TLS:
+                server.starttls()
+            server.login(config.MAIL_USERNAME, config.MAIL_PASSWORD)
+
+            for user in users:
+                msg = MIMEMultipart()
+                msg['From'] = config.MAIL_DEFAULT_SENDER[0] + f" <{config.MAIL_DEFAULT_SENDER[1]}>"
+                msg['To'] = user['email']
+                msg['Subject'] = f"New {item_type.capitalize()} Item: {item_title}"
+
+                body = f"""
+                Hello,
+
+                A new {item_type} item has been posted on FindYourLosts!
+
+                Item: {item_title}
+                Location: {item_location}
+
+                Check it out here: http://127.0.0.1:5000/dashboard
+
+                Stay safe,
+                The FindYourLosts Team
+                """
+                msg.attach(MIMEText(body, 'plain'))
+                server.send_message(msg)
+
+            server.quit()
+        except Exception as e:
+            print(f"Error sending broadcast emails: {e}")
+
+    threading.Thread(target=send_thread).start()
 
 UPLOAD_FOLDER = config.UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -34,8 +87,40 @@ def get_db_connection():
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def staff_only():
+    return 'user_id' in session and session.get('role') in ['admin', 'moderator']
+
 def admin_only():
     return 'user_id' in session and session.get('role') == 'admin'
+
+def get_setting(key, default=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT setting_value FROM settings WHERE setting_key = %s", (key,))
+    result = cursor.fetchone()
+    conn.close()
+    return result['setting_value'] if result else default
+
+def get_int_setting(key, default=0):
+    val = get_setting(key)
+    if val == 'on' or val == '1':
+        return 1
+    try:
+        return int(val) if val is not None else default
+    except (ValueError, TypeError):
+        return default
+
+@app.before_request
+def check_maintenance_mode():
+    # Only check for non-admin/staff users
+    if not staff_only():
+        # List of allowed endpoints during maintenance
+        allowed_endpoints = ['login', 'logout', 'google_login', 'home', 'static']
+        if request.endpoint in allowed_endpoints:
+            return
+            
+        if get_int_setting('maintenance_mode') == 1:
+            return render_template('maintenance.html'), 503
 
 @app.route('/')
 def home():
@@ -44,6 +129,30 @@ def home():
 @app.route('/login')
 def login():
     return render_template('login.html')
+
+@app.context_processor
+def inject_notifications():
+    if 'user_id' not in session:
+        return {'notifications': [], 'broadcast_message': ''}
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Get broadcast message
+    cursor.execute("SELECT setting_value FROM settings WHERE setting_key = 'broadcast_message'")
+    broadcast = cursor.fetchone()
+    broadcast_text = broadcast['setting_value'] if broadcast else ""
+    
+    # Get latest 5 items for notifications
+    cursor.execute("SELECT id, title, type, created_at FROM items WHERE approved = 1 ORDER BY created_at DESC LIMIT 5")
+    latest_items = cursor.fetchall()
+    
+    conn.close()
+    
+    return {
+        'notifications': latest_items,
+        'broadcast_message': broadcast_text
+    }
 
 @app.route('/login/google', methods=['POST'])
 def google_login():
@@ -57,6 +166,7 @@ def google_login():
         decoded_token = auth.verify_id_token(id_token, clock_skew_seconds=10)
         email = decoded_token['email']
         name = decoded_token.get('name', '')
+        picture = decoded_token.get('picture', '')
        
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -65,16 +175,17 @@ def google_login():
         user = cursor.fetchone()
 
         determined_role = 'admin' if email == 'rayhnmd024@gmail.com' else 'user'
-        
         if user:
-            if user['role'] != determined_role:
-                cursor.execute("UPDATE users SET role = %s WHERE id = %s", (determined_role, user['id']))
+            if user['role'] != determined_role or user.get('profile_pic') != picture:
+                cursor.execute("UPDATE users SET role = %s, profile_pic = %s WHERE id = %s", (determined_role, picture, user['id']))
                 conn.commit()
                 cursor.execute("SELECT * FROM users WHERE id = %s", (user['id'],))
                 user = cursor.fetchone()
 
             session['user_id'] = user['id']
             session['user_name'] = user['name']
+            session['user_email'] = user['email']
+            session['user_pic'] = user.get('profile_pic', '')
             session['role'] = user['role']
         else:
             from werkzeug.security import generate_password_hash
@@ -82,8 +193,8 @@ def google_login():
             
             dummy_password = generate_password_hash(secrets.token_hex(16))
             
-            cursor.execute("INSERT INTO users (name, email, password, role) VALUES (%s, %s, %s, %s)", 
-                           (name, email, dummy_password, determined_role))
+            cursor.execute("INSERT INTO users (name, email, password, role, profile_pic) VALUES (%s, %s, %s, %s, %s)", 
+                           (name, email, dummy_password, determined_role, picture))
             conn.commit()
             
             cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
@@ -91,6 +202,8 @@ def google_login():
             
             session['user_id'] = new_user['id']
             session['user_name'] = new_user['name']
+            session['user_email'] = new_user['email']
+            session['user_pic'] = new_user.get('profile_pic', '')
             session['role'] = new_user['role']
 
         conn.close()
@@ -110,8 +223,9 @@ def dashboard():
     item_type = request.args.get('type', '')
     category = request.args.get('category', '')
     location = request.args.get('location', '')
+    recent = request.args.get('recent', '')
 
-    query = "SELECT * FROM items WHERE approved =1"
+    query = "SELECT * FROM items WHERE approved = 1"
     params = []
 
     if keyword:
@@ -130,6 +244,9 @@ def dashboard():
         query += " AND location LIKE %s"
         params.append(f"%{location}%")
 
+    if recent == '1':
+        query += " AND created_at >= NOW() - INTERVAL 1 DAY"
+
     query += " ORDER BY created_at DESC"
 
     conn = get_db_connection()
@@ -138,7 +255,7 @@ def dashboard():
     items = cursor.fetchall()
     conn.close()
 
-    return render_template('dashboard.html', items=items, keyword=keyword, item_type=item_type, category=category, location=location)
+    return render_template('dashboard.html', items=items, keyword=keyword, item_type=item_type, category=category, location=location, recent=recent)
 
 @app.route('/my-posts')
 def my_posts():
@@ -178,6 +295,7 @@ def post_item():
 
         conn = get_db_connection()
         cursor = conn.cursor()
+        approved = get_int_setting('auto_approve_posts', 1)
         cursor.execute("""
             INSERT INTO items
             (user_id, title, description, category, location, item_date, image, type, approved, contact_info)
@@ -191,15 +309,25 @@ def post_item():
             item_date,
             image_filename,
             item_type,
-            0,
+            approved,
             contact_info
         ))
         conn.commit()
         conn.close()
 
+        # Trigger email broadcast if enabled
+        if get_int_setting('email_notifications_enabled', 0) == 1:
+            send_broadcast_emails(title, item_type, location)
+
         return redirect('/dashboard')
 
-    return render_template('post_item.html')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT default_contact FROM users WHERE id = %s", (session['user_id'],))
+    user = cursor.fetchone()
+    conn.close()
+
+    return render_template('post_item.html', default_contact=user['default_contact'] if user else '')
 
 @app.route('/item/<int:item_id>')
 def item_detail(item_id):
@@ -237,13 +365,32 @@ def claim_item(item_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        UPDATE items SET status='claimed'
+        UPDATE items SET status='claimed', claimed_by=%s
         WHERE id=%s AND status='open'
-    """, (item_id,))
+    """, (session['user_id'], item_id))
     conn.commit()
     conn.close()
 
     return redirect(f'/item/{item_id}')
+
+
+@app.route('/claimed-items')
+def claimed_items():
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Show items user claimed AND items they successfully delivered
+    cursor.execute("""
+        SELECT * FROM items 
+        WHERE claimed_by = %s OR (user_id = %s AND status = 'delivered') 
+        ORDER BY created_at DESC
+    """, (session['user_id'], session['user_id']))
+    items = cursor.fetchall()
+    conn.close()
+
+    return render_template('claimed_items.html', items=items)
 
 @app.route('/return/<int:item_id>')
 def return_item(item_id):
@@ -264,19 +411,104 @@ def return_item(item_id):
 
 @app.route('/admin')
 def admin_dashboard():
-    if not admin_only():
+    if not staff_only():
         return "Access Denied", 403
+        
+    keyword = request.args.get('keyword', '')
+    item_type = request.args.get('type', '')
+    category = request.args.get('category', '')
+    status = request.args.get('status', '')
+
+    query = "SELECT * FROM items WHERE 1=1"
+    params = []
+
+    if keyword:
+        query += " AND (title LIKE %s OR description LIKE %s)"
+        params.extend([f"%{keyword}%", f"%{keyword}%"])
+
+    if item_type:
+        query += " AND type = %s"
+        params.append(item_type)
+
+    if category:
+        query += " AND category LIKE %s"
+        params.append(f"%{category}%")
+
+    if status:
+        if status == 'approved':
+            query += " AND approved = 1"
+        elif status == 'pending':
+            query += " AND approved = 0"
+
+    query += " ORDER BY created_at DESC"
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM items ORDER BY created_at DESC")
+    cursor.execute(query, params)
     items = cursor.fetchall()
     conn.close()
 
-    return render_template('admin.html', items=items)
+    return render_template('admin.html', items=items, 
+                           keyword=keyword, 
+                           item_type=item_type, 
+                           category=category, 
+                           status=status)
+
+@app.route('/admin/export')
+def export_items_csv():
+    if not staff_only():
+        return "Access Denied", 403
+
+    keyword = request.args.get('keyword', '')
+    item_type = request.args.get('type', '')
+    category = request.args.get('category', '')
+    status = request.args.get('status', '')
+
+    query = "SELECT * FROM items WHERE 1=1"
+    params = []
+
+    if keyword:
+        query += " AND (title LIKE %s OR description LIKE %s)"
+        params.extend([f"%{keyword}%", f"%{keyword}%"])
+    if item_type:
+        query += " AND type = %s"
+        params.append(item_type)
+    if category:
+        query += " AND category LIKE %s"
+        params.append(f"%{category}%")
+    if status:
+        if status == 'approved':
+            query += " AND approved = 1"
+        elif status == 'pending':
+            query += " AND approved = 0"
+
+    query += " ORDER BY created_at DESC"
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(query, params)
+    items = cursor.fetchall()
+    conn.close()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    if items:
+        writer.writerow(items[0].keys())
+        for item in items:
+            writer.writerow(item.values())
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename=exported_items.csv"}
+    )
 
 @app.route('/admin/approve/<int:item_id>')
 def approve_item(item_id):
-    if not admin_only():
+    if not staff_only():
         return "Access Denied", 403
     
     conn = get_db_connection()
@@ -291,7 +523,7 @@ def approve_item(item_id):
 
 @app.route('/admin/delete/<int:item_id>')
 def delete_item(item_id):
-    if not admin_only():
+    if not staff_only():
         return "Access Denied", 403
     
     conn = get_db_connection()
@@ -357,10 +589,182 @@ def delete_user_item(item_id):
     return redirect('/my-posts')
 
 
+@app.route('/mark-delivered/<int:item_id>', methods=['POST'])
+def mark_delivered(item_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    name = request.form.get('delivered_to_name')
+    contact = request.form.get('delivered_to_contact')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Verify ownership
+    cursor.execute("SELECT user_id FROM items WHERE id = %s", (item_id,))
+    item = cursor.fetchone()
+    
+    if not item or item['user_id'] != session['user_id']:
+        conn.close()
+        return "Unauthorized", 403
+        
+    cursor.execute("""
+        UPDATE items 
+        SET status = 'delivered', 
+            delivered_to_name = %s, 
+            delivered_to_contact = %s 
+        WHERE id = %s
+    """, (name, contact, item_id))
+    
+    conn.commit()
+    conn.close()
+    
+    return redirect('/my-posts')
+
+
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Get user stats
+    cursor.execute("SELECT COUNT(*) as posts_count FROM items WHERE user_id = %s", (session['user_id'],))
+    posts_count = cursor.fetchone()['posts_count']
+    
+    cursor.execute("SELECT COUNT(*) as claims_count FROM items WHERE claimed_by = %s", (session['user_id'],))
+    claims_count = cursor.fetchone()['claims_count']
+    
+    conn.close()
+    
+    return render_template('profile.html', posts_count=posts_count, claims_count=claims_count)
+
+
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if request.method == 'POST':
+        default_contact = request.form.get('default_contact')
+        contact_visibility = request.form.get('contact_visibility')
+        email_notifications = 1 if request.form.get('email_notifications') else 0
+        
+        cursor.execute("""
+            UPDATE users 
+            SET default_contact = %s, contact_visibility = %s, email_notifications = %s 
+            WHERE id = %s
+        """, (default_contact, contact_visibility, email_notifications, session['user_id']))
+        conn.commit()
+        conn.close()
+        return redirect('/settings')
+
+    cursor.execute("SELECT * FROM users WHERE id = %s", (session['user_id'],))
+    user = cursor.fetchone()
+    conn.close()
+    
+    return render_template('settings.html', user=user)
+
+
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/login')
+
+@app.route('/admin/settings', methods=['GET', 'POST'])
+def admin_settings():
+    if not staff_only():
+        return "Access Denied", 403
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if request.method == 'POST':
+        # List of keys that come from checkboxes
+        checkbox_keys = ['auto_approve_posts', 'maintenance_mode', 'email_notifications_enabled']
+        
+        for key, value in request.form.items():
+            # If it's a checkbox and it's 'on', save as '1'
+            if key in checkbox_keys and value == 'on':
+                value = '1'
+            cursor.execute("UPDATE settings SET setting_value = %s WHERE setting_key = %s", (value, key))
+            
+        # Handle unchecked checkboxes (they don't appear in request.form)
+        for key in checkbox_keys:
+            if key not in request.form:
+                cursor.execute("UPDATE settings SET setting_value = '0' WHERE setting_key = %s", (key,))
+            
+        conn.commit()
+        flash("Settings updated successfully!", "success")
+        return redirect('/admin/settings')
+
+    cursor.execute("SELECT * FROM settings")
+    settings_rows = cursor.fetchall()
+    settings_dict = {row['setting_key']: row['setting_value'] for row in settings_rows}
+    conn.close()
+    
+    return render_template('admin_settings.html', settings=settings_dict)
+
+@app.route('/admin/users')
+def admin_users():
+    if not staff_only():
+        return "Access Denied", 403
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, email, role, profile_pic FROM users ORDER BY role DESC, name ASC")
+    users = cursor.fetchall()
+    conn.close()
+    
+    return render_template('admin_users.html', users=users)
+
+@app.route('/admin/assign-moderator', methods=['POST'])
+def assign_moderator():
+    if not staff_only():
+        return "Access Denied", 403
+    
+    email = request.form.get('email')
+    if not email:
+        flash("Email is required", "error")
+        return redirect('/admin/users')
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET role = 'moderator' WHERE email = %s AND role = 'user'", (email,))
+    if cursor.rowcount > 0:
+        conn.commit()
+        flash(f"Successfully promoted {email} to Moderator!", "success")
+    else:
+        flash(f"User with email {email} not found or is already a staff member.", "error")
+    conn.close()
+    
+    return redirect('/admin/users')
+
+@app.route('/admin/delivery-history')
+def admin_delivered():
+    print("DEBUG: Hitting admin_delivered route")
+    if not staff_only():
+        return "Access Denied", 403
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Fetch items that are delivered
+    cursor.execute("""
+        SELECT i.*, u.name as claimant_name, u.email as claimant_email 
+        FROM items i 
+        LEFT JOIN users u ON i.claimed_by = u.id 
+        WHERE i.status = 'delivered'
+        ORDER BY i.created_at DESC
+    """)
+    items = cursor.fetchall()
+    conn.close()
+    
+    return render_template('admin_delivered.html', items=items)
 
 if __name__ == '__main__':
     app.run(debug=True)

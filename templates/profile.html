@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin-top: 50px;">
+    <div class="card"
+        style="padding: 40px; background: var(--surface); border-radius: 20px; text-align: center; border: 1px solid var(--border);">
+        <div style="position: relative; width: 150px; height: 150px; margin: 0 auto 25px;">
+            {% if session.get('user_pic') %}
+            <img src="{{ session.get('user_pic') }}" alt="Profile"
+                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-light);">
+            {% else %}
+            <div
+                style="width: 100%; height: 100%; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                <i data-feather="user" style="width: 60px; height: 60px;"></i>
+            </div>
+            {% endif %}
+        </div>
+
+        <h2 style="font-size: 2rem; margin-bottom: 5px;">{{ session.get('user_name') }}</h2>
+        <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px;">{{ session.get('user_email') }}</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px;">
+            <div style="padding: 20px; background: var(--background); border-radius: 12px;">
+                <h4 style="color: var(--primary); font-size: 1.5rem; margin-bottom: 5px;">{{ posts_count }}</h4>
+                <p style="text-transform: uppercase; font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">
+                    Total Posts</p>
+            </div>
+            <div style="padding: 20px; background: var(--background); border-radius: 12px;">
+                <h4 style="color: var(--primary); font-size: 1.5rem; margin-bottom: 5px;">{{ claims_count }}</h4>
+                <p style="text-transform: uppercase; font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">
+                    Successfully Claimed</p>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <a href="/my-posts" class="btn btn-outline" style="flex: 1;">View My Posts</a>
+            <a href="/dashboard" class="btn btn-outline" style="flex: 1;">Explore Feed</a>
+        </div>
+
+        <div
+            style="margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;">
+            {% if session.get('role') in ['admin', 'moderator'] %}
+            <a href="/admin" class="btn btn-secondary"
+                style="width: 100%; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i data-feather="shield" style="width: 16px; height: 16px;"></i>
+                Go to Admin Dashboard
+            </a>
+            {% endif %}
+            <a href="/logout" class="btn btn-primary" style="width: 100%; padding: 12px;">Logout from Account</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -79,7 +79,14 @@
                 <span class="material-symbols-outlined text-2xl dark:hidden">dark_mode</span>
                 <span class="material-symbols-outlined text-2xl hidden dark:block">light_mode</span>
             </button>
-            <a class="hover:text-primary transition-colors" href="/login">Login</a>
+            <a href="/profile"
+                class="flex items-center justify-center overflow-hidden w-8 h-8 rounded-full border border-orange-100 dark:border-navy-700">
+                {% if session.get('user_pic') %}
+                <img src="{{ session.get('user_pic') }}" alt="Profile" class="w-full h-full object-cover">
+                {% else %}
+                <span class="material-symbols-outlined text-navy-700 dark:text-gray-300">person</span>
+                {% endif %}
+            </a>
             <div class="relative cursor-pointer">
                 <span
                     class="material-symbols-outlined text-2xl text-navy-700 dark:text-gray-300 hover:text-primary transition-colors">notifications</span>
@@ -188,7 +195,7 @@
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-navy-900 dark:text-white uppercase tracking-wider">Contact
                         Person</label>
-                    <input name="contact_info" required placeholder="Enter phone number"
+                    <input name="contact_info" required placeholder="Enter phone number" value="{{ default_contact }}"
                         class="w-full px-4 py-3 bg-background-light dark:bg-navy-900 border-2 border-transparent focus:border-primary focus:ring-0 rounded-lg dark:text-white transition-all placeholder:text-navy-700/40"
                         type="tel" />
                 </div>

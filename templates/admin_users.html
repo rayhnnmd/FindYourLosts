@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>User Management - FindYourLosts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FF6B4A",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-item-active {
+            @apply bg-indigo-50 text-primary dark:bg-indigo-900/20 dark:text-indigo-400;
+        }
+    </style>
+    <script>
+        // Check for saved theme preference immediately
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div class="flex h-screen overflow-hidden">
+        <aside
+            class="w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden md:flex flex-col">
+            <div class="p-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined">location_searching</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-extrabold italic tracking-tighter text-lg leading-none">
+                        <span class="text-primary">Find</span><span
+                            class="text-indigo-950 dark:text-slate-100">YourLosts</span><span
+                            class="text-primary">.</span>
+                    </span>
+                    <span class="text-[10px] font-semibold text-primary uppercase tracking-wider">Admin Panel</span>
+                </div>
+            </div>
+            <nav class="flex-1 px-4 space-y-1 mt-4">
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/dashboard">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/admin">
+                    <span class="material-symbols-outlined">assignment</span>
+                    Post Management
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg sidebar-item-active transition-colors"
+                    href="/admin/users">
+                    <span class="material-symbols-outlined">group</span>
+                    User Management
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/admin/delivery-history">
+                    <span class="material-symbols-outlined">local_shipping</span>
+                    Delivered Items
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/admin/settings">
+                    <span class="material-symbols-outlined">settings</span>
+                    System Settings
+                </a>
+            </nav>
+            <div class="p-4 mt-auto border-t border-slate-200 dark:border-slate-800">
+                <a href="/profile" class="flex items-center gap-3 px-2">
+                    <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                        {% if session.get('user_pic') %}
+                        <img alt="Admin Avatar" src="{{ session.get('user_pic') }}"
+                            class="w-full h-full object-cover" />
+                        {% else %}
+                        <div class="flex items-center justify-center h-full text-slate-400">
+                            <span class="material-symbols-outlined">person</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate">{{ session.get('user_name') }}</p>
+                        <p class="text-xs text-slate-500 truncate capitalize">{{ session.get('role') }}</p>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header
+                class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur flex items-center justify-between px-8">
+                <h1 class="text-xl font-semibold">User Management</h1>
+                <div class="flex items-center gap-4">
+                    <button id="theme-toggle" class="p-2 text-slate-400 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-lg">dark_mode</span>
+                    </button>
+                    <a href="/logout" class="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                        <span class="material-symbols-outlined text-lg">logout</span>
+                    </a>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-8">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div
+                    class="mb-6 p-4 rounded-xl {% if category == 'success' %}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400{% else %}bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <!-- Assign Moderator -->
+                <div
+                    class="mb-8 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h2 class="text-lg font-semibold mb-2">Promote to Moderator</h2>
+                    <p class="text-sm text-slate-500 mb-6">Assign management privileges to a user by their email
+                        address.</p>
+                    <form action="/admin/assign-moderator" method="POST" class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex-1 relative">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">alternate_email</span>
+                            <input name="email" required placeholder="User email address..." type="email"
+                                class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" />
+                        </div>
+                        <button type="submit"
+                            class="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200 dark:shadow-none">
+                            Assign Moderator
+                        </button>
+                    </form>
+                </div>
+
+                <!-- User List -->
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+                        <h2 class="text-lg font-semibold">System Users</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr
+                                    class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                                    <th class="px-6 py-4 font-semibold">User</th>
+                                    <th class="px-6 py-4 font-semibold">Email</th>
+                                    <th class="px-6 py-4 font-semibold">Role</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Access</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                {% for user in users %}
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center">
+                                                {% if user.profile_pic %}
+                                                <img src="{{ user.profile_pic }}" class="w-full h-full object-cover">
+                                                {% else %}
+                                                <span class="material-symbols-outlined text-slate-400">person</span>
+                                                {% endif %}
+                                            </div>
+                                            <span class="text-sm font-medium">{{ user.name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm">{{ user.email }}</td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-2.5 py-0.5 rounded-full text-xs font-semibold
+                                            {% if user.role == 'admin' %}bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400
+                                            {% elif user.role == 'moderator' %}bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400
+                                            {% else %}bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400{% endif %}">
+                                            {{ user.role | capitalize }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        {% if user.role == 'user' %}
+                                        <button onclick="confirmPromote('{{ user.email }}')"
+                                            class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold uppercase tracking-wider">Promote</button>
+                                        {% else %}
+                                        <span class="text-xs text-slate-400 font-medium">Full Access</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <form id="promote-form" action="/admin/assign-moderator" method="POST" style="display:none">
+        <input type="hidden" name="email" id="promote-email">
+    </form>
+
+    <script>
+        function confirmPromote(email) {
+            if (confirm(`Are you sure you want to promote ${email} to Moderator?`)) {
+                document.getElementById('promote-email').value = email;
+                document.getElementById('promote-form').submit();
+            }
+        }
+
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        });
+    </script>
+</body>
+
+</html>

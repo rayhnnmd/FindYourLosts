@@ -53,16 +53,15 @@
         class="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-8">
+                <div class="flex items-center gap-16">
                     <a href="/"
                         class="text-2xl font-extrabold tracking-tighter text-slate-900 dark:text-white flex items-center gap-1">
                         <span class="material-symbols-outlined text-primary text-3xl">location_searching</span>
                         <span class="text-primary">Find</span>YourLosts<span class="text-primary">.</span>
                     </a>
-                    <div class="hidden md:flex gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
+                    <div class="hidden md:flex gap-10 text-sm font-medium text-slate-600 dark:text-slate-400">
                         <a class="hover:text-primary transition-colors" href="/dashboard">Browse</a>
                         <a class="hover:text-primary transition-colors" href="/post-item">Report Lost</a>
-                        <a class="hover:text-primary transition-colors" href="/my-posts">My Reports</a>
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
@@ -72,11 +71,14 @@
                     <button class="p-2 text-slate-500 hover:text-primary transition-colors">
                         <span class="material-symbols-outlined">notifications</span>
                     </button>
-                    <div
+                    <a href="/profile"
                         class="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden border border-slate-300 dark:border-slate-600">
-                        <img alt="User avatar"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUP6DheQ30dY-0edBiDB8MnLPUBChRbNbbtyND1oKSTyHRsNRVzK5pym1KqkylcZr8WvLYVMGXazAAOfe6yNfcOm41kZuxAOognsS2hhihld3RPWl5XhnP9nUDb0_nLE9nTnLeYKHsS172P43oKNI8IlmYqYLmuBoskUWJPcM7_BEjoIGN27PBr8MteCXIGssEwc5yKaDU-S_96xQnBT7l2EFeHM-HQf85kIoMwv_0sGNlvFIE54w0pnMYQ3AkbsHAAX-oYbNqcIM" />
-                    </div>
+                        {% if session.get('user_pic') %}
+                        <img alt="User avatar" src="{{ session.get('user_pic') }}" class="w-full h-full object-cover" />
+                        {% else %}
+                        <span class="material-symbols-outlined text-slate-500 text-sm">person</span>
+                        {% endif %}
+                    </a>
                 </div>
             </div>
         </div>
@@ -177,9 +179,123 @@
                             <span>Bring a friend or family member with you for the exchange.</span>
                         </li>
                     </ul>
-                    <a class="mt-6 inline-block text-primary text-sm font-semibold hover:underline" href="#">
+                    <button onclick="toggleSafetyModal(true)"
+                        class="mt-6 inline-block text-primary text-sm font-semibold hover:underline bg-transparent border-none cursor-pointer p-0">
                         Read more safety guidelines →
-                    </a>
+                    </button>
+
+                    <!-- Safety Guidelines Modal -->
+                    <div id="safety-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 sm:p-6">
+                        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+                            onclick="toggleSafetyModal(false)"></div>
+                        <div
+                            class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all">
+                            <div class="p-6 sm:p-8">
+                                <div class="flex items-center justify-between mb-8">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
+                                            <span
+                                                class="material-symbols-outlined text-amber-500 text-3xl font-variation-fill">gpp_maybe</span>
+                                        </div>
+                                        <div>
+                                            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Safety
+                                                Guidelines</h2>
+                                            <p class="text-sm text-slate-500">Protect yourself during exchanges</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="toggleSafetyModal(false)"
+                                        class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                                        <span class="material-symbols-outlined">close</span>
+                                    </button>
+                                </div>
+
+                                <div class="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                                    <div
+                                        class="flex gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                                        <div class="text-primary font-bold text-lg">01</div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-900 dark:text-white mb-1">Public Meeting
+                                                Spots</h4>
+                                            <p class="text-sm text-slate-600 dark:text-slate-400">Always meet in
+                                                well-lit, high-traffic public areas. Police station lobbies, coffee
+                                                shops, or bank parking lots are ideal choices.</p>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="flex gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                                        <div class="text-primary font-bold text-lg">02</div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-900 dark:text-white mb-1">Bring a Companion
+                                            </h4>
+                                            <p class="text-sm text-slate-600 dark:text-slate-400">Whenever possible,
+                                                bring a friend or family member along. If meeting alone, ensure someone
+                                                knows exactly where and when you are meeting.</p>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="flex gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                                        <div class="text-primary font-bold text-lg">03</div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-900 dark:text-white mb-1">Inspect Thoroughly
+                                            </h4>
+                                            <p class="text-sm text-slate-600 dark:text-slate-400">Take your time to
+                                                carefully inspect the item before finalizing the exchange. Ensure it
+                                                matches the description and functions as expected.</p>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="flex gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                                        <div class="text-primary font-bold text-lg">04</div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-900 dark:text-white mb-1">Private
+                                                Information</h4>
+                                            <p class="text-sm text-slate-600 dark:text-slate-400">Never share your home
+                                                address, financial details, or login credentials. Keep communication
+                                                within the platform whenever possible.</p>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="flex gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                                        <div class="text-primary font-bold text-lg">05</div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-900 dark:text-white mb-1">Trust Your
+                                                Instincts</h4>
+                                            <p class="text-sm text-slate-600 dark:text-slate-400">If a situation or user
+                                                feels suspicious or makes you uncomfortable, don't hesitate to cancel
+                                                the meeting and leave immediately.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                                    <button onclick="toggleSafetyModal(false)"
+                                        class="px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-2xl hover:bg-slate-800 dark:hover:bg-slate-100 transition-all">
+                                        Got it, thanks
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function toggleSafetyModal(show) {
+                            const modal = document.getElementById('safety-modal');
+                            if (show) {
+                                modal.classList.remove('hidden');
+                                modal.classList.add('flex');
+                                document.body.style.overflow = 'hidden';
+                            } else {
+                                modal.classList.add('hidden');
+                                modal.classList.remove('flex');
+                                document.body.style.overflow = 'auto';
+                            }
+                        }
+                    </script>
                 </div>
             </div>
         </div>

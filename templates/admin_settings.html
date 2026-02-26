@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>System Settings - FindYourLosts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FF6B4A",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-item-active {
+            @apply bg-indigo-50 text-primary dark:bg-indigo-900/20 dark:text-indigo-400;
+        }
+        .form-switch {
+            @apply relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none;
+        }
+        .form-switch-dot {
+            @apply inline-block h-4 w-4 transform rounded-full bg-white transition-transform;
+        }
+    </style>
+    <script>
+        // Check for saved theme preference immediately
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div class="flex h-screen overflow-hidden">
+        <aside
+            class="w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden md:flex flex-col">
+            <div class="p-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined">location_searching</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-extrabold italic tracking-tighter text-lg leading-none">
+                        <span class="text-primary">Find</span><span
+                            class="text-indigo-950 dark:text-slate-100">YourLosts</span><span
+                            class="text-primary">.</span>
+                    </span>
+                    <span class="text-[10px] font-semibold text-primary uppercase tracking-wider">Admin Panel</span>
+                </div>
+            </div>
+            <nav class="flex-1 px-4 space-y-1 mt-4">
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/dashboard">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/admin">
+                    <span class="material-symbols-outlined">assignment</span>
+                    Post Management
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/admin/users">
+                    <span class="material-symbols-outlined">group</span>
+                    User Management
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/admin/delivery-history">
+                    <span class="material-symbols-outlined">local_shipping</span>
+                    Delivered Items
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg sidebar-item-active transition-colors"
+                    href="/admin/settings">
+                    <span class="material-symbols-outlined">settings</span>
+                    System Settings
+                </a>
+            </nav>
+            <div class="p-4 mt-auto border-t border-slate-200 dark:border-slate-800">
+                <a href="/profile" class="flex items-center gap-3 px-2">
+                    <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                        {% if session.get('user_pic') %}
+                        <img alt="Admin Avatar" src="{{ session.get('user_pic') }}"
+                            class="w-full h-full object-cover" />
+                        {% else %}
+                        <div class="flex items-center justify-center h-full text-slate-400">
+                            <span class="material-symbols-outlined">person</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate">{{ session.get('user_name') }}</p>
+                        <p class="text-xs text-slate-500 truncate capitalize">{{ session.get('role') }}</p>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header
+                class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur flex items-center justify-between px-8">
+                <h1 class="text-xl font-semibold">System Settings</h1>
+                <div class="flex items-center gap-4">
+                    <button id="theme-toggle" class="p-2 text-slate-400 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-lg">dark_mode</span>
+                    </button>
+                    <a href="/logout" class="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                        <span class="material-symbols-outlined text-lg">logout</span>
+                    </a>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-8">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div
+                    class="mb-6 p-4 rounded-xl {% if category == 'success' %}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400{% else %}bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST" class="max-w-4xl space-y-8">
+                    <!-- General Settings -->
+                    <div
+                        class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+                            <h2 class="text-lg font-semibold">General Configurations</h2>
+                            <p class="text-sm text-slate-500">Manage global platform behavior</p>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-medium">Auto-Approve Posts</h3>
+                                    <p class="text-sm text-slate-500">If enabled, new posts go live immediately without
+                                        moderation.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="auto_approve_posts" onchange="this.form.submit()"
+                                        class="sr-only peer" {% if settings.get('auto_approve_posts')=='1' %}checked{%
+                                        endif %}>
+                                    <div
+                                        class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary/10 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:after:border-slate-600 peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <hr class="border-slate-100 dark:border-slate-800">
+
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-medium">Maintenance Mode</h3>
+                                    <p class="text-sm text-slate-500">Disable public access to the feed while performing
+                                        updates.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="maintenance_mode" onchange="this.form.submit()"
+                                        class="sr-only peer" {% if settings.get('maintenance_mode')=='1' %}checked{%
+                                        endif %}>
+                                    <div
+                                        class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary/10 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:after:border-slate-600 peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <hr class="border-slate-100 dark:border-slate-800">
+
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-medium">Global Email Notifications</h3>
+                                    <p class="text-sm text-slate-500">Automatically notify all users via email when new
+                                        items are posted.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="email_notifications_enabled"
+                                        onchange="this.form.submit()" class="sr-only peer" {% if
+                                        settings.get('email_notifications_enabled')=='1' %}checked{% endif %}>
+                                    <div
+                                        class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:peer-focus:ring-primary/10 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:after:border-slate-600 peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Limits & Security -->
+                    <div
+                        class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+                            <h2 class="text-lg font-semibold">Limits & Security</h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Max Upload Size (MB)</label>
+                                <input type="number" name="max_upload_size_mb"
+                                    value="{{ settings.get('max_upload_size_mb', '5') }}"
+                                    class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Broadcast Message</label>
+                                <textarea name="broadcast_message" rows="3"
+                                    placeholder="Enter message to display as a banner to all users..."
+                                    class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">{{ settings.get('broadcast_message', '') }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-4">
+                        <button type="submit"
+                            class="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:bg-orange-600 transition-all active:scale-95">
+                            Save All Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        });
+    </script>
+</body>
+
+</html>

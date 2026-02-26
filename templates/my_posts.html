@@ -19,9 +19,26 @@
                     </a>
                 </li>
                 <li style="margin-bottom: 5px;">
-                    <a href="#"
+                    <a href="/claimed-items"
                         style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--text-muted); font-weight: 500;">
                         <i data-feather="check-circle"></i> Claimed Items
+                    </a>
+                </li>
+            </ul>
+
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 10px 0;">
+
+            <ul style="padding: 10px 0;">
+                <li style="margin-bottom: 5px;">
+                    <a href="/profile"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--text-muted); font-weight: 500;">
+                        <i data-feather="user"></i> Profile
+                    </a>
+                </li>
+                <li style="margin-bottom: 5px;">
+                    <a href="/settings"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--text-muted); font-weight: 500;">
+                        <i data-feather="settings"></i> Settings
                     </a>
                 </li>
             </ul>
@@ -71,6 +88,14 @@
                         <div style="margin-top: 15px; display: flex; gap: 10px;">
                             <a href="/item/{{ item.id }}" class="btn btn-outline"
                                 style="flex: 1; text-align: center; font-size: 0.8rem; padding: 8px;">View Details</a>
+
+                            {% if item.status != 'delivered' %}
+                            <button onclick="openDeliveryModal('{{ item.id }}')" class="btn btn-outline"
+                                style="padding: 8px; color: #00b894; border-color: #00b894; display: flex; align-items: center; justify-content: center;">
+                                <i data-feather="check-square" style="width: 16px; height: 16px;"></i>
+                            </button>
+                            {% endif %}
+
                             <a href="/delete-item/{{ item.id }}" class="btn btn-outline"
                                 onclick="return confirm('Are you sure you want to delete this post?')"
                                 style="padding: 8px; color: #ff7675; border-color: #ff7675; display: flex; align-items: center; justify-content: center;">
@@ -89,4 +114,57 @@
             {% endif %}
         </div>
     </div>
-    {% endblock %}
+</div>
+
+<!-- Delivery Details Modal -->
+<div id="deliveryModal"
+    style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+    <div
+        style="background-color: var(--surface); margin: 15% auto; padding: 30px; border-radius: 16px; width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+        <h3 style="margin-bottom: 20px;">Mark as Delivered</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Please enter the details of the
+            person you returned this item to.</p>
+
+        <form id="deliveryForm" method="POST">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: var(--text-muted);">Owner's
+                    Name</label>
+                <input type="text" name="delivered_to_name" required
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); color: var(--text-main);">
+            </div>
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; font-size: 0.8rem; margin-bottom: 5px; color: var(--text-muted);">Owner's
+                    Contact Info</label>
+                <input type="text" name="delivered_to_contact" required placeholder="Phone number or Social"
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); color: var(--text-main);">
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="closeDeliveryModal()" class="btn btn-secondary"
+                    style="flex: 1; border-radius: 8px;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1; border-radius: 8px;">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openDeliveryModal(itemId) {
+        const modal = document.getElementById('deliveryModal');
+        const form = document.getElementById('deliveryForm');
+        form.action = '/mark-delivered/' + itemId;
+        modal.style.display = 'block';
+    }
+
+    function closeDeliveryModal() {
+        document.getElementById('deliveryModal').style.display = 'none';
+    }
+
+    window.onclick = function (event) {
+        const modal = document.getElementById('deliveryModal');
+        if (event.target == modal) {
+            closeDeliveryModal();
+        }
+    }
+</script>
+{% endblock %}

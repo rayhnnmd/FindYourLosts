@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="display: flex; gap: 30px; margin-top: 30px;">
+    <!-- Sidebar -->
+    <aside style="width: 250px; flex-shrink: 0;">
+        <div class="card" style="padding: 10px; background: var(--surface); border-radius: 12px; margin-bottom: 20px;">
+            <ul style="padding: 10px 0;">
+                <li style="margin-bottom: 5px;">
+                    <a href="/dashboard"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--text-muted); font-weight: 500;">
+                        <i data-feather="grid"></i> Feed
+                    </a>
+                </li>
+                <li style="margin-bottom: 5px;">
+                    <a href="/my-posts"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--text-muted); font-weight: 500;">
+                        <i data-feather="archive"></i> My Posts
+                    </a>
+                </li>
+                <li style="margin-bottom: 5px;">
+                    <a href="/claimed-items"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--text-muted); font-weight: 500;">
+                        <i data-feather="check-circle"></i> Claimed Items
+                    </a>
+                </li>
+            </ul>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 10px 0;">
+            <ul style="padding: 10px 0;">
+                <li style="margin-bottom: 5px;">
+                    <a href="/profile"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--text-muted); font-weight: 500;">
+                        <i data-feather="user"></i> Profile
+                    </a>
+                </li>
+                {% if session.get('role') == 'admin' %}
+                <li style="margin-bottom: 5px;">
+                    <a href="/admin"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--secondary); font-weight: 600;">
+                        <i data-feather="shield"></i> Admin Panel
+                    </a>
+                </li>
+                {% endif %}
+                <li style="margin-bottom: 5px;">
+                    <a href="/settings"
+                        style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--primary); background: var(--primary-light); font-weight: 600;">
+                        <i data-feather="settings"></i> Settings
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div style="flex-grow: 1;">
+        <div style="margin-bottom: 30px;">
+            <h2 style="font-size: 2rem;">Settings</h2>
+            <p style="color: var(--text-muted);">Manage your account preferences and defaults.</p>
+        </div>
+
+        <form method="POST" class="card"
+            style="padding: 30px; background: var(--surface); border-radius: 16px; border: 1px solid var(--border); max-width: 600px;">
+            <!-- Profile Defaults Section -->
+            <div style="margin-bottom: 40px;">
+                <h3
+                    style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main); display: flex; align-items: center; gap: 10px;">
+                    <i data-feather="user-check" style="width: 20px;"></i> Profile Defaults
+                </h3>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Default
+                        Contact Info</label>
+                    <input type="text" name="default_contact" value="{{ user.default_contact or '' }}"
+                        placeholder="e.g. +1 234 567 890"
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); color: var(--text-main); outline: none;">
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">This will be pre-filled
+                        when you
+                        post new items.</p>
+                </div>
+            </div>
+
+            <!-- Privacy Section -->
+            <div style="margin-bottom: 40px;">
+                <h3
+                    style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main); display: flex; align-items: center; gap: 10px;">
+                    <i data-feather="shield" style="width: 20px;"></i> Privacy & Security
+                </h3>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Contact
+                        Visibility</label>
+                    <select name="contact_visibility"
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); color: var(--text-main); outline: none; cursor: pointer;">
+                        <option value="public" {% if user.contact_visibility=='public' %}selected{% endif %}>Public
+                            (Anyone can see)</option>
+                        <option value="verified" {% if user.contact_visibility=='verified' %}selected{% endif %}>
+                            Verified Users Only</option>
+                        <option value="hidden" {% if user.contact_visibility=='hidden' %}selected{% endif %}>Hidden
+                            (Approved matches only)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Notifications Section -->
+            <div style="margin-bottom: 40px;">
+                <h3
+                    style="font-size: 1.1rem; margin-bottom: 20px; color: var(--text-main); display: flex; align-items: center; gap: 10px;">
+                    <i data-feather="bell" style="width: 20px;"></i> Notifications
+                </h3>
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: var(--background); border-radius: 8px;">
+                    <div>
+                        <p style="font-size: 0.9rem; font-weight: 600;">Email Notifications</p>
+                        <p style="font-size: 0.75rem; color: var(--text-muted);">Receive alerts about matches and
+                            claims.</p>
+                    </div>
+                    <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 26px;">
+                        <input type="checkbox" name="email_notifications" {% if user.email_notifications %}checked{%
+                            endif %} style="opacity: 0; width: 0; height: 0;">
+                        <span class="slider"
+                            style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
+                    </label>
+                </div>
+            </div>
+
+            <style>
+                input:checked+.slider {
+                    background-color: var(--primary);
+                }
+
+                .slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 18px;
+                    width: 18px;
+                    left: 4px;
+                    bottom: 4px;
+                    background-color: white;
+                    transition: .4s;
+                    border-radius: 50%;
+                }
+
+                input:checked+.slider:before {
+                    transform: translateX(24px);
+                }
+            </style>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px;">Save Changes</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

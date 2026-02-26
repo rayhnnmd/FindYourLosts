@@ -26,15 +26,65 @@
             <div class="nav-links">
                 <a href="/">Home</a>
                 <a href="/dashboard">Browse Items</a>
-                <a href="#">How it Works</a>
+                <a href="/#how-it-works">How it Works</a>
             </div>
             <div class="nav-actions">
                 {% if session.get('user_id') %}
-                <a href="/dashboard" class="btn btn-outline">Dashboard</a>
-                {% if session.get('role') == 'admin' %}
-                <a href="/admin" class="btn btn-secondary">Admin Panel</a>
-                {% endif %}
-                <a href="/logout" class="btn btn-primary">Logout</a>
+                <a href="/profile" style="display: flex; align-items: center; gap: 8px;">
+                    {% if session.get('user_pic') %}
+                    <img src="{{ session.get('user_pic') }}" alt="Profile"
+                        style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+                    {% else %}
+                    <div
+                        style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                        <i data-feather="user" style="width: 16px; height: 16px;"></i>
+                    </div>
+                    {% endif %}
+                </a>
+
+                <!-- Notification Bell -->
+                <div class="notifications-wrapper">
+                    <button class="notifications-toggle" id="notifications-btn" aria-label="Notifications">
+                        <i data-feather="bell"></i>
+                        {% if broadcast_message or notifications %}
+                        <span class="notification-badge"></span>
+                        {% endif %}
+                    </button>
+                    <div class="notifications-dropdown" id="notifications-dropdown">
+                        <div class="notifications-header">
+                            <span>Notifications</span>
+                        </div>
+                        <div class="notifications-list">
+                            {% if broadcast_message %}
+                            <div class="notification-item broadcast-item">
+                                <span class="notification-title">📢 Admin Broadcast</span>
+                                <p style="font-size: 0.8rem; margin: 4px 0;">{{ broadcast_message }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if notifications %}
+                            {% for item in notifications %}
+                            <div class="notification-item" onclick="window.location.href='/item/{{ item.id }}'">
+                                <span class="notification-title">New {{ item.type.capitalize() }} Item: {{ item.title
+                                    }}</span>
+                                <div class="notification-meta">
+                                    <span>Just now</span>
+                                    <span style="color: var(--primary);">View Details</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+
+                            {% if not broadcast_message and not notifications %}
+                            <div class="empty-notifications">
+                                <p>No new notifications</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <a href="/logout" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8rem;">Logout</a>
                 {% else %}
                 <a href="/login" class="btn btn-transparent">Login</a>
                 {% endif %}
@@ -74,6 +124,23 @@
                 icon.setAttribute('data-feather', isDark ? 'sun' : 'moon');
                 feather.replace();
             }
+        }
+
+        // Notification Dropdown Toggle
+        const notifyBtn = document.getElementById('notifications-btn');
+        const notifyDropdown = document.getElementById('notifications-dropdown');
+
+        if (notifyBtn) {
+            notifyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notifyDropdown.classList.toggle('active');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!notifyDropdown.contains(e.target) && e.target !== notifyBtn) {
+                    notifyDropdown.classList.remove('active');
+                }
+            });
         }
     </script>
 </body>

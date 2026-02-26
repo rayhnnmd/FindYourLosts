@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Delivered Items - FindYourLosts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FF6B4A",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#111827",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-item-active {
+            @apply bg-indigo-50 text-primary dark:bg-indigo-900/20 dark:text-indigo-400;
+        }
+    </style>
+</head>
+<script>
+    if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
+    }
+</script>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div class="flex h-screen overflow-hidden">
+        <aside
+            class="w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden md:flex flex-col">
+            <div class="p-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined">location_searching</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-extrabold italic tracking-tighter text-lg leading-none">
+                        <span class="text-primary">Find</span><span
+                            class="text-indigo-950 dark:text-slate-100">YourLosts</span><span
+                            class="text-primary">.</span>
+                    </span>
+                    <span class="text-[10px] font-semibold text-primary uppercase tracking-wider">Admin Panel</span>
+                </div>
+            </div>
+            <nav class="flex-1 px-4 space-y-1 mt-4">
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/dashboard">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/admin">
+                    <span class="material-symbols-outlined">assignment</span>
+                    Post Management
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/admin/users">
+                    <span class="material-symbols-outlined">group</span>
+                    User Management
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg sidebar-item-active transition-colors"
+                    href="/admin/delivery-history">
+                    <span class="material-symbols-outlined">local_shipping</span>
+                    Delivered Items
+                </a>
+                <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    href="/admin/settings">
+                    <span class="material-symbols-outlined">settings</span>
+                    System Settings
+                </a>
+            </nav>
+            <div class="p-4 mt-auto border-t border-slate-200 dark:border-slate-800">
+                <a href="/profile" class="flex items-center gap-3 px-2">
+                    <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                        {% if session.get('user_pic') %}
+                        <img alt="Admin Avatar" src="{{ session.get('user_pic') }}"
+                            class="w-full h-full object-cover" />
+                        {% else %}
+                        <div class="flex items-center justify-center h-full text-slate-400">
+                            <span class="material-symbols-outlined">person</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate">{{ session.get('user_name', 'Admin') }}</p>
+                        <p class="text-xs text-slate-500 truncate capitalize">{{ session.get('role', 'Moderator') }}</p>
+                    </div>
+                </a>
+            </div>
+        </aside>
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header
+                class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur flex items-center justify-between px-8">
+                <div class="flex items-center gap-4">
+                    <h1 class="text-xl font-semibold">Delivery Monitoring</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="theme-toggle" class="p-2 text-slate-400 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-lg">dark_mode</span>
+                    </button>
+                    <a href="/logout" class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Logout">
+                        <span class="material-symbols-outlined text-lg">logout</span>
+                    </a>
+                </div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-8">
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+                        <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">All Delivered Items</h2>
+                        <p class="text-sm text-slate-500">History of items that have been successfully returned to their
+                            owners.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr
+                                    class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
+                                    <th class="px-6 py-4 font-semibold">Item Details</th>
+                                    <th class="px-6 py-4 font-semibold">Returned To</th>
+                                    <th class="px-6 py-4 font-semibold">Status</th>
+                                    <th class="px-6 py-4 font-semibold">Date Logged</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                {% for item in items %}
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+                                                {% if item.image %}
+                                                <img src="/static/uploads/{{ item.image }}"
+                                                    class="w-full h-full object-cover">
+                                                {% else %}
+                                                <span
+                                                    class="material-symbols-outlined text-slate-400 text-lg">image</span>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-medium">{{ item.title }}</p>
+                                                <p class="text-xs text-slate-500">#LF-{{ item.id }} • {{
+                                                    item.type|capitalize }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            {% if item.delivered_to_name %}
+                                            <span class="text-sm font-medium">{{ item.delivered_to_name }}</span>
+                                            <span class="text-xs text-slate-500">{{ item.delivered_to_contact }}</span>
+                                            {% elif item.claimant_name %}
+                                            <span class="text-sm font-medium">{{ item.claimant_name }}</span>
+                                            <span class="text-xs text-slate-500">{{ item.claimant_email }}</span>
+                                            {% else %}
+                                            <span class="text-sm italic text-slate-400">Manual Delivery</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Delivered</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-slate-500">{{ item.created_at }}</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <a href="/item/{{ item.id }}"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary hover:text-primary transition-all">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="px-6 py-8 text-center text-slate-500">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <span class="material-symbols-outlined text-4xl">local_shipping</span>
+                                            <p>No delivered items monitored yet.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+    </script>
+</body>
+
+</html>

@@ -21,7 +21,7 @@
                     </a>
                 </li>
                 <li style="margin-bottom: 5px;">
-                    <a href="#"
+                    <a href="/claimed-items"
                         style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--text-muted); font-weight: 500;">
                         <i data-feather="check-circle"></i> Claimed Items
                     </a>
@@ -32,13 +32,13 @@
 
             <ul style="padding: 10px 0;">
                 <li style="margin-bottom: 5px;">
-                    <a href="#"
+                    <a href="/profile"
                         style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--text-muted); font-weight: 500;">
                         <i data-feather="user"></i> Profile
                     </a>
                 </li>
                 <li style="margin-bottom: 5px;">
-                    <a href="#"
+                    <a href="/settings"
                         style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; color: var(--text-muted); font-weight: 500;">
                         <i data-feather="settings"></i> Settings
                     </a>
@@ -84,26 +84,21 @@
                         style="width: 100%; padding: 12px 12px 12px 45px; border: none; background: transparent; outline: none; font-size: 1rem; color: var(--text-main);">
                 </div>
                 <!-- Filters inline -->
-                <select name="type"
-                    style="padding: 0 15px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--text-muted); cursor: pointer;">
+                <select name="type" onchange="this.form.submit()"
+                    style="padding: 0 15px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--text-main); cursor: pointer; outline: none;">
                     <option value="">All Categories</option>
                     <option value="lost" {% if item_type=='lost' %}selected{% endif %}>Lost</option>
                     <option value="found" {% if item_type=='found' %}selected{% endif %}>Found</option>
                 </select>
-                <button type="submit" class="btn btn-primary">Search Items</button>
+                <button type="submit" class="btn btn-primary">Search</button>
             </form>
         </div>
 
-        <!-- Filters Row (Visual Only for match) -->
         <div style="display: flex; gap: 15px; margin-bottom: 30px;">
-            <button
-                style="padding: 8px 15px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 5px;">
+            <a href="/dashboard?recent=1"
+                style="padding: 8px 15px; background: {% if recent == '1' %}var(--primary-light){% else %}var(--surface){% endif %}; border: 1px solid {% if recent == '1' %}var(--primary){% else %}var(--border){% endif %}; border-radius: 6px; color: {% if recent == '1' %}var(--primary){% else %}var(--text-muted){% endif %}; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: {% if recent == '1' %}600{% else %}400{% endif %};">
                 <i data-feather="calendar" style="width: 14px;"></i> Past 24 Hours
-            </button>
-            <button
-                style="padding: 8px 15px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 5px;">
-                <i data-feather="map-pin" style="width: 14px;"></i> Near Me
-            </button>
+            </a>
             <a href="/dashboard"
                 style="margin-left: auto; color: var(--primary); font-size: 0.9rem; display: flex; align-items: center; gap: 5px;">
                 <i data-feather="x" style="width: 14px;"></i> Clear Filters
