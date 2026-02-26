@@ -5,3 +5,5 @@ pymysql
 werkzeug
 firebase-admin
 python-dotenv
+gunicorn
+whitenoise

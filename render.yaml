@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: findyourlosts
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: MYSQL_HOST
+        fromDatabase:
+          name: findyourlosts-db
+          property: host
+      - key: MYSQL_DB
+        fromDatabase:
+          name: findyourlosts-db
+          property: database
+      - key: MYSQL_USER
+        fromDatabase:
+          name: findyourlosts-db
+          property: user
+      - key: MYSQL_PASSWORD
+        fromDatabase:
+          name: findyourlosts-db
+          property: password
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USE_TLS
+        value: "True"
+      - key: MAIL_USERNAME
+        sync: false # Set in Render dashboard
+      - key: MAIL_PASSWORD
+        sync: false # Set in Render dashboard
+      - key: MAIL_SENDER_NAME
+        value: FindYourLosts
+      - key: MAIL_SENDER_EMAIL
+        sync: false # Set in Render dashboard
+
+databases:
+  - name: findyourlosts-db
+    databaseName: findyourlosts
+    user: admin
+    plan: free # Change to starter for production

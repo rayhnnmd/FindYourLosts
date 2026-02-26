@@ -14,7 +14,10 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import threading
 
+from whitenoise import WhiteNoise
+
 app = Flask(__name__)
+app.wsgi_app = WhiteNoise(app.wsgi_app, root='static/', prefix='static/')
 app.secret_key = config.SECRET_KEY
 
 def send_broadcast_emails(item_title, item_type, item_location):
@@ -767,4 +770,5 @@ def admin_delivered():
     return render_template('admin_delivered.html', items=items)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=os.environ.get('DEBUG', 'False') == 'True')
