@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>FindYourLosts | Edit Item</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:ital,wght@0,700;1,700&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FF6B4A",
+                        "background-light": "#FEF6F1",
+                        "background-dark": "#0B1F3F",
+                        navy: { 900: "#0B1F3F", 800: "#1A2E4C", 700: "#2A3D59", }
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: { DEFAULT: "0.5rem", },
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        .step-active { color: #FF5F33; border-color: #FF5F33; }
+        .material-symbols-outlined { vertical-align: middle; }
+    </style>
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-navy-900 dark:text-gray-100 min-h-screen transition-colors duration-300 font-sans">
+    <nav class="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto border-b border-orange-100 dark:border-navy-800">
+        <div class="flex items-center gap-12">
+            <a class="flex items-center gap-2 group" href="/">
+                <div class="bg-primary p-1.5 rounded-lg transform group-hover:rotate-12 transition-transform">
+                    <span class="material-symbols-outlined text-white text-2xl">search_check</span>
+                </div>
+                <h1 class="text-2xl font-extrabold tracking-tighter text-navy-900 dark:text-white">
+                    <span class="text-primary not-italic">Find</span>YourLosts<span class="text-primary not-italic">.</span>
+                </h1>
+            </a>
+            <div class="hidden md:flex gap-8 text-sm font-semibold uppercase tracking-wider">
+                <a class="hover:text-primary transition-colors" href="/dashboard">Search</a>
+                <a class="hover:text-primary transition-colors" href="/post-item">Post Item</a>
+                <a class="hover:text-primary transition-colors" href="/#how-it-works">About</a>
+            </div>
+        </div>
+        <div class="flex items-center gap-6 text-sm font-semibold uppercase tracking-wider">
+            <button id="theme-toggle" class="flex items-center justify-center text-navy-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl dark:hidden">dark_mode</span>
+                <span class="material-symbols-outlined text-2xl hidden dark:block">light_mode</span>
+            </button>
+            <a href="/profile" class="flex items-center justify-center overflow-hidden w-8 h-8 rounded-full border border-orange-100 dark:border-navy-700">
+                {% if session.get('user_pic') %}
+                <img src="{{ session.get('user_pic') }}" alt="Profile" class="w-full h-full object-cover">
+                {% else %}
+                <span class="material-symbols-outlined text-navy-700 dark:text-gray-300">person</span>
+                {% endif %}
+            </a>
+        </div>
+    </nav>
+    <main class="max-w-7xl mx-auto px-8 py-12 grid grid-cols-1 lg:grid-cols-12 gap-16">
+        <div class="lg:col-span-5 space-y-8">
+            <div class="space-y-4">
+                <div class="flex items-center gap-2 text-primary font-bold tracking-[0.2em] text-xs uppercase">
+                    <span class="w-8 h-[2px] bg-primary"></span>
+                    Edit Listing
+                </div>
+                <h2 class="text-6xl font-bold font-display text-navy-900 dark:text-white leading-tight">
+                    Update your <br />
+                    <span class="italic text-primary">item's</span> <br />
+                    details.
+                </h2>
+                <p class="text-lg text-navy-700 dark:text-gray-400 max-w-md">
+                    Need to add more specifics or correct a mistake? Keeping your listing accurate helps reunite items with their owners faster.
+                </p>
+            </div>
+            <div class="relative rounded-2xl overflow-hidden aspect-[4/5] bg-gray-200 dark:bg-navy-800 shadow-xl group">
+                {% if item.image %}
+                <img class="object-cover w-full h-full opacity-90 transition-transform duration-700 group-hover:scale-105" src="/static/uploads/{{ item.image }}" />
+                {% else %}
+                <img class="object-cover w-full h-full opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC108amiNTZ2Z3WuYHhsR6PPRh5NvGqPrjpFQxkZ_zEdpc34Rop4u8ANViNTCWb9BZyArEGK1UY9L1r-BbGsU7nMIKvFEgNnzzgyDVPixhgmWhKDIH64tidG_Tsa-p6jTHCY2NYQ6ADlrbls_nyI1Crq0ZOHSf0IQdCDdblHg8_bO1Q79f-w59vTWKGCNKKu_C832HV_uTS-eSmoSXm8z0qs1OIe_o43x5MYxesmfiOPG8OaJyZiZMo8deXj6sbd42PZWhcyK0ptds" />
+                {% endif %}
+                <div class="absolute inset-0 bg-gradient-to-t from-navy-900/40 to-transparent"></div>
+            </div>
+        </div>
+        <div class="lg:col-span-7 bg-white dark:bg-navy-800/50 p-8 lg:p-12 rounded-3xl shadow-sm border border-orange-100 dark:border-navy-700">
+            <form action="/edit-item/{{ item.id }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2 col-span-2">
+                        <label class="text-sm font-semibold text-navy-900 dark:text-white uppercase tracking-wider">Item Name</label>
+                        <input name="title" required value="{{ item.title }}"
+                            class="w-full px-4 py-3 bg-background-light dark:bg-navy-900 border-2 border-transparent focus:border-primary focus:ring-0 rounded-lg dark:text-white transition-all placeholder:text-navy-700/40"
+                            type="text" />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-navy-900 dark:text-white uppercase tracking-wider">Item Type</label>
+                        <select name="type" required id="item-type-select"
+                            class="w-full px-4 py-3 bg-background-light dark:bg-navy-900 border-2 border-transparent focus:border-primary focus:ring-0 rounded-lg dark:text-white transition-all appearance-none cursor-pointer">
+                            <option value="lost" {% if item.type == 'lost' %}selected{% endif %}>Lost</option>
+                            <option value="found" {% if item.type == 'found' %}selected{% endif %}>Found</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-navy-900 dark:text-white uppercase tracking-wider">Category</label>
+                        <div class="relative">
+                            <input name="category" required list="categories" value="{{ item.category }}"
+                                class="w-full px-4 py-3 bg-background-light dark:bg-navy-900 border-2 border-transparent focus:border-primary focus:ring-0 rounded-lg dark:text-white transition-all appearance-none cursor-pointer">
+                            <datalist id="categories">
+                                <option value="Electronics">
+                                <option value="Keys">
+                                <option value="Pets">
+                                <option value="Wallets & Bags">
+                                <option value="Clothing">
+                                <option value="Other">
+                            </datalist>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-navy-900 dark:text-white uppercase tracking-wider">Date {% if item.type == 'lost' %}Lost{% else %}Found{% endif %}</label>
+                        <input name="item_date" required value="{{ item.item_date }}"
+                            class="w-full px-4 py-3 bg-background-light dark:bg-navy-900 border-2 border-transparent focus:border-primary focus:ring-0 rounded-lg dark:text-white transition-all"
+                            type="date" />
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-navy-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                        <span id="location-label-text">Area Where {% if item.type == 'lost' %}Lost{% else %}Found{% endif %}</span>
+                        <span class="material-symbols-outlined text-primary text-lg">location_on</span>
+                    </label>
+                    <input name="location" required value="{{ item.location }}"
+                        class="w-full px-4 py-3 bg-background-light dark:bg-navy-900 border-2 border-transparent focus:border-primary focus:ring-0 rounded-lg dark:text-white transition-all placeholder:text-navy-700/40"
+                        type="text" />
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-navy-900 dark:text-white uppercase tracking-wider">Contact Person</label>
+                    <input name="contact_info" required value="{{ item.contact_info }}"
+                        class="w-full px-4 py-3 bg-background-light dark:bg-navy-900 border-2 border-transparent focus:border-primary focus:ring-0 rounded-lg dark:text-white transition-all placeholder:text-navy-700/40"
+                        type="tel" />
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-navy-900 dark:text-white uppercase tracking-wider">Detailed Description</label>
+                    <textarea name="description" required
+                        class="w-full px-4 py-3 bg-background-light dark:bg-navy-900 border-2 border-transparent focus:border-primary focus:ring-0 rounded-lg dark:text-white transition-all placeholder:text-navy-700/40"
+                        rows="4">{{ item.description }}</textarea>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-navy-900 dark:text-white uppercase tracking-wider">Update Photo (Optional)</label>
+                    <div class="border-2 border-dashed border-orange-200 dark:border-navy-700 rounded-xl p-10 flex flex-col items-center justify-center gap-4 bg-background-light/30 dark:bg-navy-900/30 hover:bg-orange-50 dark:hover:bg-navy-800 transition-colors group cursor-pointer relative">
+                        <input type="file" name="image" accept="image/*" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                        <div id="upload-placeholder" class="flex flex-col items-center justify-center gap-4 w-full h-full">
+                            <div class="w-16 h-16 bg-white dark:bg-navy-700 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                                <span class="material-symbols-outlined text-primary text-3xl">add_a_photo</span>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-navy-900 dark:text-white font-bold">Upload a new photo</p>
+                                <p class="text-sm text-navy-700 dark:text-gray-400 mt-1">Leave blank to keep current photo</p>
+                            </div>
+                        </div>
+                        <div id="image-preview" class="hidden flex-col items-center justify-center w-full h-full relative z-20 pointer-events-none">
+                            <img id="preview-img" src="" alt="Selected Image" class="max-h-64 rounded-lg shadow-lg object-contain mb-4">
+                            <button type="button" id="select-again-btn" class="pointer-events-auto px-4 py-2 bg-primary text-white text-xs font-bold uppercase tracking-widest rounded-full hover:bg-orange-600 transition-colors shadow-md">
+                                Select Again
+                            </button>
+                        </div>
+                    </div>
+                    <script>
+                        const fileInput = document.getElementById('file-input');
+                        const placeholder = document.getElementById('upload-placeholder');
+                        const preview = document.getElementById('image-preview');
+                        const previewImg = document.getElementById('preview-img');
+                        const selectAgainBtn = document.getElementById('select-again-btn');
+
+                        fileInput.addEventListener('change', function (e) {
+                            const file = e.target.files[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = function (e) {
+                                    previewImg.src = e.target.result;
+                                    placeholder.classList.add('hidden');
+                                    preview.classList.remove('hidden');
+                                    preview.classList.add('flex');
+                                }
+                                reader.readAsDataURL(file);
+                            }
+                        });
+
+                        selectAgainBtn.addEventListener('click', function () {
+                            fileInput.click();
+                        });
+
+                        // Dynamic Location Label Script
+                        const itemTypeSelect = document.getElementById('item-type-select');
+                        const locationLabelText = document.getElementById('location-label-text');
+                        function updateLabels() {
+                            if (itemTypeSelect.value === 'lost') {
+                                locationLabelText.textContent = 'Area Where Lost';
+                            } else {
+                                locationLabelText.textContent = 'Area Where Found';
+                            }
+                        }
+                        itemTypeSelect.addEventListener('change', updateLabels);
+                        updateLabels();
+                    </script>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-orange-100 dark:border-navy-700">
+                    <button class="w-full sm:w-auto px-12 py-4 bg-primary text-white text-sm font-bold uppercase tracking-widest rounded-full hover:bg-orange-600 transform hover:-translate-y-0.5 transition-all shadow-lg shadow-orange-500/30" type="submit">
+                        Save Changes
+                    </button>
+                    <a href="/item/{{ item.id }}" class="text-sm font-bold uppercase tracking-widest text-navy-700 dark:text-gray-400 hover:text-primary transition-colors">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+    </script>
+</body>
+</html>

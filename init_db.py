@@ -54,7 +54,39 @@ def init_db():
             )
         """)
         
-        # 3. Create Settings Table
+        # 3. Create Claims Table
+        print("Creating claims table...")
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS claims (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                item_id INT NOT NULL,
+                user_id INT NOT NULL,
+                proof TEXT NOT NULL,
+                status VARCHAR(20) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        
+        # 4. Create Messages Table
+        print("Creating messages table...")
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                item_id INT NOT NULL,
+                sender_id INT NOT NULL,
+                receiver_id INT NOT NULL,
+                body TEXT NOT NULL,
+                read_at TIMESTAMP NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
+                FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        
+        # 5. Create Settings Table
         print("Creating settings table...")
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS settings (

@@ -89,6 +89,14 @@
                             <a href="/item/{{ item.id }}" class="btn btn-outline"
                                 style="flex: 1; text-align: center; font-size: 0.8rem; padding: 8px;">View Details</a>
 
+                            {% if item.pending_claims and item.pending_claims > 0 %}
+                            <a href="/review-claims/{{ item.id }}" class="btn btn-primary"
+                                style="flex: 1; text-align: center; font-size: 0.8rem; padding: 8px; background: #FF6B4A; color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                <i data-feather="inbox" style="width: 14px; height: 14px;"></i> {{ item.pending_claims
+                                }} Claims
+                            </a>
+                            {% endif %}
+
                             {% if item.status != 'delivered' %}
                             <button onclick="openDeliveryModal('{{ item.id }}')" class="btn btn-outline"
                                 style="padding: 8px; color: #00b894; border-color: #00b894; display: flex; align-items: center; justify-content: center;">

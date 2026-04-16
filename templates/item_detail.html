@@ -84,6 +84,26 @@
         </div>
     </nav>
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-8 space-y-4">
+            {% for category, message in messages %}
+            <div
+                class="p-4 rounded-xl border {% if category == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400{% else %}bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400{% endif %} flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined">{% if category == 'success' %}check_circle{% else %}info{%
+                        endif %}</span>
+                    <span class="font-medium">{{ message }}</span>
+                </div>
+                <button onclick="this.parentElement.remove()"
+                    class="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
         <nav aria-label="Breadcrumb" class="flex mb-8 text-sm font-medium text-slate-500 dark:text-slate-400">
             <ol class="flex items-center space-x-2">
                 <li><a class="hover:text-primary transition-colors" href="/dashboard">Dashboard</a></li>
@@ -145,16 +165,116 @@
                 </div>
                 {% endif %}
                 <div class="space-y-4">
+                    {% if session.get('user_id') == item.user_id %}
+                    <a href="/edit-item/{{ item.id }}" class="w-full bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold py-4 px-8 rounded-full transition-all active:scale-95 flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">edit</span>
+                        Edit Item Details
+                    </a>
+
+                    {% if messagers %}
+                    <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 mt-6">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-3">Chats regarding this item:</h3>
+                        <div class="flex flex-col gap-2">
+                            {% for m in messagers %}
+                            <a href="/messages/{{ item.id }}/{{ m.id }}" class="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 hover:border-primary hover:text-primary transition-colors group">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-slate-400 group-hover:text-primary">person</span>
+                                    <span class="font-medium text-sm text-slate-900 dark:text-white group-hover:text-primary">{{ m.name }}</span>
+                                </div>
+                                <span class="material-symbols-outlined text-sm text-slate-400 group-hover:text-primary">chevron_right</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                        {% if session.get('user_id') %}
+                        <a href="/messages/{{ item.id }}/{{ item.user_id }}" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-full shadow-lg shadow-blue-500/25 transition-all active:scale-95 flex items-center justify-center gap-2 mb-4">
+                            <span class="material-symbols-outlined">chat</span>
+                            Message Poster Privately
+                        </a>
+                        {% endif %}
+                    {% endif %}
                     {% if item.status == 'open' %}
-                    <a href="/claim/{{ item.id }}"
+                    <button onclick="toggleClaimModal(true)"
                         class="w-full bg-primary hover:bg-orange-600 text-white font-bold py-4 px-8 rounded-full shadow-lg shadow-primary/25 transition-all active:scale-95 flex items-center justify-center gap-2">
                         <span class="material-symbols-outlined">verified</span>
                         {% if item.type == 'lost' %}I Found This!{% else %}Claim this Item{% endif %}
-                    </a>
+                    </button>
                     <p class="text-xs text-center text-slate-500 dark:text-slate-400">
                         By clicking "{% if item.type == 'lost' %}I Found This!{% else %}Claim this Item{% endif %}",
                         you'll be asked to provide proof of ownership.
                     </p>
+
+                    <!-- Claim Proof Modal -->
+                    <div id="claim-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 sm:p-6">
+                        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+                            onclick="toggleClaimModal(false)"></div>
+                        <div
+                            class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all">
+                            <form action="/claim/{{ item.id }}" method="POST">
+                                <div class="p-6 sm:p-8">
+                                    <div class="flex items-center justify-between mb-8">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                                                <span
+                                                    class="material-symbols-outlined text-primary text-3xl font-variation-fill">verified</span>
+                                            </div>
+                                            <div>
+                                                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Submit
+                                                    Proof</h2>
+                                                <p class="text-sm text-slate-500">Provide details to verify your claim
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="toggleClaimModal(false)"
+                                            class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                                            <span class="material-symbols-outlined">close</span>
+                                        </button>
+                                    </div>
+
+                                    <div class="space-y-6">
+                                        <div>
+                                            <label
+                                                class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Proof
+                                                of Ownership</label>
+                                            <textarea name="proof" rows="4" required
+                                                placeholder="Describe identifying features, serial numbers, or context about the item to prove it belongs to you..."
+                                                class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-4">
+                                        <button type="button" onclick="toggleClaimModal(false)"
+                                            class="px-6 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                                            Cancel
+                                        </button>
+                                        <button type="submit"
+                                            class="px-6 py-3 bg-primary text-white font-bold rounded-2xl hover:bg-orange-600 transition-all shadow-lg shadow-primary/25">
+                                            Submit Claim
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <script>
+                        function toggleClaimModal(show) {
+                            const modal = document.getElementById('claim-modal');
+                            if (show) {
+                                modal.classList.remove('hidden');
+                                modal.classList.add('flex');
+                                document.body.style.overflow = 'hidden';
+                            } else {
+                                modal.classList.add('hidden');
+                                modal.classList.remove('flex');
+                                document.body.style.overflow = 'auto';
+                            }
+                        }
+                    </script>
                     {% else %}
                     <button disabled
                         class="w-full bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold py-4 px-8 rounded-full cursor-not-allowed flex items-center justify-center gap-2">

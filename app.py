@@ -278,6 +278,12 @@ def my_posts():
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM items WHERE user_id = %s ORDER BY created_at DESC", (session['user_id'],))
     items = cursor.fetchall()
+    
+    # Get pending claims count for each item
+    for item in items:
+        cursor.execute("SELECT COUNT(*) as count FROM claims WHERE item_id = %s AND status = 'pending'", (item['id'],))
+        item['pending_claims'] = cursor.fetchone()['count']
+        
     conn.close()
 
     return render_template('my_posts.html', items=items)
@@ -362,29 +368,162 @@ def item_detail(item_id):
     """, (item_id,))
     recent_items = cursor.fetchall()
 
+    messagers = []
+    if 'user_id' in session and item and session['user_id'] == item['user_id']:
+        cursor.execute("""
+            SELECT DISTINCT u.id, u.name 
+            FROM messages m
+            JOIN users u ON (m.sender_id = u.id OR m.receiver_id = u.id)
+            WHERE m.item_id = %s AND u.id != %s
+        """, (item_id, session['user_id']))
+        messagers = cursor.fetchall()
+
     conn.close()
 
     if not item:
         return "<h3>Item not found</h3>"
 
-    return render_template('item_detail.html', item=item, recent_items=recent_items)
+    return render_template('item_detail.html', item=item, recent_items=recent_items, messagers=messagers)
 
-@app.route('/claim/<int:item_id>')
-def claim_item(item_id):
+@app.route('/edit-item/<int:item_id>', methods=['GET', 'POST'])
+def edit_item(item_id):
     if 'user_id' not in session:
         return redirect('/login')
 
     conn = get_db_connection()
     cursor = conn.cursor()
+    cursor.execute("SELECT * FROM items WHERE id = %s", (item_id,))
+    item = cursor.fetchone()
+
+    # Ensure item exists and user is authorized
+    if not item or item['user_id'] != session['user_id']:
+        conn.close()
+        flash("Unauthorized to edit this item.", "error")
+        return redirect('/dashboard')
+
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+        category = request.form['category']
+        location = request.form['location']
+        item_date = request.form['item_date']
+        item_type = request.form['type']
+        contact_info = request.form['contact_info']
+
+        file = request.files.get('image')
+        if file and file.filename != '' and allowed_file(file.filename):
+            ext = file.filename.rsplit('.', 1)[1].lower()
+            image_filename = f"{uuid.uuid4().hex}.{ext}"
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+            
+            cursor.execute("""
+                UPDATE items 
+                SET title=%s, description=%s, category=%s, location=%s, item_date=%s, type=%s, contact_info=%s, image=%s 
+                WHERE id=%s AND user_id=%s
+            """, (title, description, category, location, item_date, item_type, contact_info, image_filename, item_id, session['user_id']))
+        else:
+            cursor.execute("""
+                UPDATE items 
+                SET title=%s, description=%s, category=%s, location=%s, item_date=%s, type=%s, contact_info=%s
+                WHERE id=%s AND user_id=%s
+            """, (title, description, category, location, item_date, item_type, contact_info, item_id, session['user_id']))
+        
+        conn.commit()
+        conn.close()
+        flash("Item updated successfully!", "success")
+        return redirect(f'/item/{item_id}')
+
+    conn.close()
+    return render_template('edit_item.html', item=item)
+
+@app.route('/claim/<int:item_id>', methods=['GET', 'POST'])
+def claim_item(item_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    if request.method == 'GET':
+        return redirect(f'/item/{item_id}')
+
+    proof = request.form.get('proof')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Check if a pending claim already exists from this user
+    cursor.execute("SELECT id FROM claims WHERE item_id = %s AND user_id = %s AND status = 'pending'", (item_id, session['user_id']))
+    if cursor.fetchone():
+        flash("You already have a pending claim for this item.", "warning")
+        conn.close()
+        return redirect(f'/item/{item_id}')
+    
+    # Insert new claim
     cursor.execute("""
-        UPDATE items SET status='claimed', claimed_by=%s
-        WHERE id=%s AND status='open'
-    """, (session['user_id'], item_id))
+        INSERT INTO claims (item_id, user_id, proof, status)
+        VALUES (%s, %s, %s, 'pending')
+    """, (item_id, session['user_id'], proof))
+    
+    conn.commit()
+    conn.close()
+    
+    flash("Claim submitted successfully. Awaiting poster's review.", "success")
+    return redirect(f'/item/{item_id}')
+
+@app.route('/review-claims/<int:item_id>')
+def review_claims(item_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM items WHERE id = %s AND user_id = %s", (item_id, session['user_id']))
+    item = cursor.fetchone()
+    if not item:
+        conn.close()
+        return "Unauthorized or Not Found", 403
+        
+    cursor.execute("""
+        SELECT c.*, u.name as user_name, u.email as user_email 
+        FROM claims c JOIN users u ON c.user_id = u.id 
+        WHERE c.item_id = %s AND c.status = 'pending'
+    """, (item_id,))
+    claims = cursor.fetchall()
+    conn.close()
+    
+    return render_template('review_claims.html', item=item, claims=claims)
+
+@app.route('/handle-claim/<int:claim_id>/<action>', methods=['POST'])
+def handle_claim(claim_id, action):
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT c.*, i.user_id as owner_id 
+        FROM claims c JOIN items i ON c.item_id = i.id 
+        WHERE c.id = %s
+    """, (claim_id,))
+    claim_info = cursor.fetchone()
+
+    if not claim_info or claim_info['owner_id'] != session['user_id']:
+        conn.close()
+        return "Unauthorized", 403
+
+    if action == 'approve':
+        cursor.execute("UPDATE claims SET status='approved' WHERE id=%s", (claim_id,))
+        cursor.execute("UPDATE claims SET status='rejected' WHERE item_id=%s AND id!=%s", (claim_info['item_id'], claim_id))
+        cursor.execute("UPDATE items SET status='claimed', claimed_by=%s WHERE id=%s", (claim_info['user_id'], claim_info['item_id']))
+        flash("Claim approved successfully.", "success")
+    elif action == 'reject':
+        cursor.execute("UPDATE claims SET status='rejected' WHERE id=%s", (claim_id,))
+        flash("Claim rejected.", "success")
+
     conn.commit()
     conn.close()
 
-    return redirect(f'/item/{item_id}')
-
+    return redirect(f"/review-claims/{claim_info['item_id']}")
 
 @app.route('/claimed-items')
 def claimed_items():
@@ -778,6 +917,103 @@ def admin_delivered():
     
     return render_template('admin_delivered.html', items=items)
 
+# --- Messaging Routes ---
+
+@app.route('/messages/<int:item_id>/<int:other_user_id>')
+def messages_view(item_id, other_user_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Get item
+    cursor.execute("SELECT id, title, user_id FROM items WHERE id = %s", (item_id,))
+    item = cursor.fetchone()
+    
+    if not item:
+        conn.close()
+        flash("Item not found.", "error")
+        return redirect('/')
+        
+    # Security: exactly one of the participants must be the item owner
+    print(f"DEBUG messages_view: item_user_id={item['user_id']}, session_user_id={session.get('user_id')}, other_user_id={other_user_id}")
+    if int(item['user_id']) not in [int(session['user_id']), int(other_user_id)]:
+        conn.close()
+        flash("Not authorized to view these messages.", "error")
+        return redirect('/')
+        
+    # Get other user details
+    cursor.execute("SELECT id, name FROM users WHERE id = %s", (other_user_id,))
+    other_user = cursor.fetchone()
+    
+    conn.close()
+    
+    if not other_user:
+        flash("User not found.", "error")
+        return redirect('/')
+        
+    return render_template('chat.html', item=item, other_user=other_user)
+
+@app.route('/api/messages/<int:item_id>/<int:other_user_id>', methods=['GET', 'POST'])
+def api_messages(item_id, other_user_id):
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    current_user_id = session['user_id']
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Validate authorization (either current user is item owner, or current user is the participant)
+    cursor.execute("SELECT user_id FROM items WHERE id = %s", (item_id,))
+    item = cursor.fetchone()
+    
+    if not item:
+        conn.close()
+        return jsonify({"error": "Item not found"}), 404
+        
+    if int(item['user_id']) not in [int(current_user_id), int(other_user_id)]:
+        conn.close()
+        return jsonify({"error": "Forbidden"}), 403
+
+    if request.method == 'GET':
+        # Fetch conversation between current_user and other_user for this item
+        cursor.execute("""
+            SELECT id, sender_id, receiver_id, body, created_at 
+            FROM messages 
+            WHERE item_id = %s 
+              AND ((sender_id = %s AND receiver_id = %s) OR (sender_id = %s AND receiver_id = %s))
+            ORDER BY created_at ASC
+        """, (item_id, current_user_id, other_user_id, other_user_id, current_user_id))
+        messages = cursor.fetchall()
+        
+        # Mark as read (optional polish)
+        # cursor.execute("UPDATE messages SET read_at = CURRENT_TIMESTAMP WHERE item_id = %s AND receiver_id = %s AND sender_id = %s AND read_at IS NULL", (item_id, current_user_id, other_user_id))
+        # conn.commit()
+        
+        conn.close()
+        
+        # Format created_at for JSON serialization
+        for msg in messages:
+            if msg['created_at']:
+                msg['created_at'] = msg['created_at'].isoformat()
+                
+        return jsonify(messages)
+
+    if request.method == 'POST':
+        body = request.form.get('body')
+        if not body:
+            conn.close()
+            return jsonify({"error": "Message body is required"}), 400
+            
+        cursor.execute("""
+            INSERT INTO messages (item_id, sender_id, receiver_id, body)
+            VALUES (%s, %s, %s, %s)
+        """, (item_id, current_user_id, other_user_id, body))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True})
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=os.environ.get('DEBUG', 'False') == 'True')
